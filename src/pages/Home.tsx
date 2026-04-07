@@ -23,8 +23,8 @@ export const Home = () => {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+            viewport={{ once: true, margin: "150px" }}
+            transition={{ duration: 0.6 }}
           >
             {/* label */}
             <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
@@ -58,8 +58,8 @@ export const Home = () => {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.3 }}
+            viewport={{ once: true, margin: "150px" }}
+            transition={{ delay: 0.1, duration: 0.5 }}
             className="mt-14"
           >
             <Link to="/menu" id="home-full-menu-btn" className="btn-primary inline-flex">

@@ -45,8 +45,8 @@ export const ContactForm = () => (
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9 }}
+          viewport={{ once: true, margin: "150px" }}
+          transition={{ duration: 0.6 }}
         >
           <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
             Nous Trouver
@@ -118,8 +118,8 @@ export const ContactForm = () => (
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.9 }}
+          viewport={{ once: true, margin: "150px" }}
+          transition={{ duration: 0.6 }}
           style={{
             borderRadius: '2rem',
             overflow: 'hidden',

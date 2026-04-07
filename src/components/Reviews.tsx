@@ -53,8 +53,8 @@ export const Reviews = () => (
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
+          viewport={{ once: true, margin: "150px" }}
+          transition={{ duration: 0.6 }}
         >
           <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
             Témoignages
@@ -70,8 +70,8 @@ export const Reviews = () => (
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.2, duration: 0.7 }}
+          viewport={{ once: true, margin: "150px" }}
+          transition={{ delay: 0.1, duration: 0.6 }}
           style={{
             background: 'rgba(255,255,255,0.04)',
             backdropFilter: 'blur(12px)',
@@ -107,8 +107,8 @@ export const Reviews = () => (
             id={`review-card-${i + 1}`}
             initial={{ opacity: 0, y: 32 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: i * 0.15, duration: 0.8 }}
+            viewport={{ once: true, margin: "150px" }}
+            transition={{ delay: i * 0.1, duration: 0.5 }}
             style={{
               background: 'rgba(255,255,255,0.03)',
               border: '1px solid rgba(166,75,42,0.15)',
