@@ -92,17 +92,18 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
   </div>
 ));
 
+const plats: MenuItem[] = menuData?.plats || [];
+const categories = Array.from(new Set(plats.map(item => item.category)))
+  .sort((a, b) => {
+    const indexA = ORDER.indexOf(a);
+    const indexB = ORDER.indexOf(b);
+    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+
 const MenuPage = () => {
-  const plats: MenuItem[] = menuData?.plats || [];
-  const categories = Array.from(new Set(plats.map(item => item.category)))
-    .sort((a, b) => {
-      const indexA = ORDER.indexOf(a);
-      const indexB = ORDER.indexOf(b);
-      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-      if (indexA === -1) return 1;
-      if (indexB === -1) return -1;
-      return indexA - indexB;
-    });
 
   const [activeCategory, setActiveCategory] = useState(categories[0] || "");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);

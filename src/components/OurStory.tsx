@@ -83,9 +83,7 @@ export const OurStory = () => {
 
             {/* Floating badge top-right */}
             <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="absolute -top-3 right-0 sm:-top-6 sm:-right-6 w-[6.5rem] h-[6.5rem] sm:w-[8rem] sm:h-[8rem] flex flex-col items-center justify-center bg-[#A64B2A] text-[#F2E9E1] rounded-full border-[3px] border-[#FAF7F4] shadow-[0_8px_32px_rgba(166,75,42,0.35)] z-10 p-3"
+              className="absolute -top-3 right-0 sm:-top-6 sm:-right-6 w-[6.5rem] h-[6.5rem] sm:w-[8rem] sm:h-[8rem] flex flex-col items-center justify-center bg-[#A64B2A] text-[#F2E9E1] rounded-full border-[3px] border-[#FAF7F4] shadow-[0_8px_32px_rgba(166,75,42,0.35)] z-10 p-3 animate-float"
             >
               <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.7rem', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', lineHeight: 1.4, textAlign: 'center' }}>
                 L’Art<br />de Créer

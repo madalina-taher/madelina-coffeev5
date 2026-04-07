@@ -100,9 +100,7 @@ export const Hero = () => {
         <div className="hidden lg:flex flex-col items-center gap-8 pr-8">
           {/* Floating sticker badge — real brand asset */}
           <motion.div
-            animate={{ y: [0, -14, 0], rotate: [0, 3, -2, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            className="select-none relative"
+            className="select-none relative animate-float"
           >
             <div className="absolute inset-0 rounded-full border border-[#A64B2A]/20 scale-105" />
             <img
@@ -131,9 +129,7 @@ export const Hero = () => {
       {/* ── Scroll indicator ── */}
       <motion.div
         style={{ opacity }}
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity }}
-        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer"
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 cursor-pointer animate-bounce"
         onClick={() => document.getElementById('our-story')?.scrollIntoView({ behavior: 'smooth' })}
       >
         <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.6rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(42,33,24,0.35)' }}>
