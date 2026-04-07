@@ -1,0 +1,249 @@
+{
+  "plats": [
+    {
+      "category": "🥐 Viennoiseries",
+      "title": "Danish à la fraise",
+      "price": 4,
+      "image": "https://i.ibb.co/Z16GRB5F/IMG-3363.jpg",
+      "description": "Pâte feuilletée levée, crème pâtissière cuite et fraises fraîches."
+    },
+    {
+      "category": "🥐 Viennoiseries",
+      "title": "Croissandine",
+      "price": 3.5,
+      "image": "https://i.ibb.co/qYn556TC/IMG-3318.jpg",
+      "description": "Un mélange entre le croissant et l’amandine"
+    },
+    {
+      "category": "🥐 Viennoiseries",
+      "title": "Croissant",
+      "price": 3,
+      "image": "https://i.ibb.co/ksMx0zS3/IMG-3317.jpg",
+      "description": "Croissant pur beurre"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Matcha latte fraise",
+      "price": 7.5,
+      "image": "https://i.ibb.co/PGpTPt8m/IMG-2042.jpg",
+      "description": "Thé matcha mélangé à du lait et un coulis de fraise, servi avec des glaçons"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Matcha latte vanille",
+      "price": 7,
+      "image": "https://i.ibb.co/DHnwXS9Q/497-BF2-E0-6-B8-D-4-B9-F-9-E74-83-C1-F00-DFF34.jpg",
+      "description": "Thé matcha, lait et sirop à la vanille, servi avec des glaçons"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Matcha latte glacé",
+      "price": 6.5,
+      "image": "https://i.ibb.co/wZWhTN7f/IMG-2137.jpg",
+      "description": "Thé matcha mélangé à du lait, servi sur glace"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Américain glacé",
+      "price": 5,
+      "image": "https://i.ibb.co/xqD0Wphs/IMG-3657.jpg",
+      "description": "Café allongé servi avec des glaçons"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Latte glacé",
+      "price": 5.5,
+      "image": "https://i.ibb.co/FvfHqyK/IMG-3658.jpg",
+      "description": "Café espresso avec lait, servi avec des glacons"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Jus de fraise",
+      "price": 5.5,
+      "image": "https://i.ibb.co/6c7j0Psm/IMG-3659.jpg",
+      "description": "Jus de fraise maison"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Soda",
+      "price": 2.5,
+      "image": "https://i.ibb.co/996Qm4nc/IMG-3656.jpg",
+      "description": "Pour des raisons éthiques, certaines marques comme Coca-Cola ne sont pas disponibles ici"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Eau 1/2L",
+      "price": 1,
+      "image": "https://i.ibb.co/Xk46Qs3b/IMG-3655.gif",
+      "description": "Eau plate"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Eau 1 L",
+      "price": 2,
+      "image": "https://i.ibb.co/ccKpTKTV/IMG-3654.jpg",
+      "description": "Eau plate"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Cinnamon Latte",
+      "price": 8,
+      "image": "https://i.ibb.co/PvmvWj8N/IMG-1943.jpg",
+      "description": "Un latte chaud parfumé à la cannelle et surmonté de crème"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Tiramisu Latte",
+      "price": 8.5,
+      "image": "https://i.ibb.co/yc8wfN7F/IMG-1955.jpg",
+      "description": "Un latte gourmand inspiré du célèbre dessert italien, aux notes de café et de crème"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Thé & tisane BIO",
+      "price": 3.8,
+      "image": "https://i.ibb.co/S4Wjn0pw/IMG-1256.jpg",
+      "description": "Une sélection de thés et infusions biologiques, à savourer à tout moment"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Matcha Latte",
+      "price": 6.5,
+      "image": "https://i.ibb.co/Hpd54v4v/IMG-8094.jpg",
+      "description": "Notre matcha BIO en version latte, chaud, doux et légèrement végétal"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Caramel macchiato",
+      "price": 5,
+      "image": "https://i.ibb.co/Ynd1y3Z/IMG-0922.jpg",
+      "description": "Un latte chaud délicatement marqué d’espresso et nappé de caramel"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Big Bol Latte",
+      "price": 8,
+      "image": "https://i.ibb.co/r2qCKBty/IMG-2386.jpg",
+      "description": "Un grand bol de café au lait chaud, doux et réconfortant + une viennoiserie pur beurre au choix"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Affogato",
+      "price": 7,
+      "image": "https://i.ibb.co/FbgMVNbs/IMG-3653.jpg",
+      "description": "Un espresso chaud versé sur une glace vanille fait maison, simple et terriblement gourmand"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Cappuccino",
+      "price": 3.8,
+      "image": "https://i.ibb.co/F4dK58Q7/IMG-3650.jpg",
+      "description": "Un espresso surmonté d’une mousse de lait légère et onctueuse"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Américain",
+      "price": 3,
+      "image": "https://i.ibb.co/HDQrfdqq/IMG-3649.jpg",
+      "description": "Un espresso allongé à l’eau chaude, léger et facile à boire"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Direct",
+      "price": 3.5,
+      "image": "https://i.ibb.co/bj1SBzth/IMG-1219.jpg",
+      "description": "Un espresso adouci par du lait chaud"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Express",
+      "price": 2.5,
+      "image": "https://i.ibb.co/kVMVqMXm/IMG-3648.jpg",
+      "description": "Un café court et intense"
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "capucin",
+      "price": 2.5,
+      "image": "https://images.unsplash.com/photo-1541167760496-1628856ab772?q=80&w=800&auto=format&fit=crop",
+      "description": "Un délicieux café avec une mousse de lait onctueuse."
+    },
+    {
+      "category": "☕ Boisson chaude",
+      "title": "Chocolat Chaud Maison",
+      "price": 9,
+      "image": "https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?q=80&w=800&auto=format&fit=crop",
+      "description": "Chocolat fondu onctueux, lait chaud et marshmallows maison"
+    },
+    {
+      "category": "🥐 Viennoiseries",
+      "title": "Pain au Chocolat",
+      "price": 3.5,
+      "image": "https://i.ibb.co/qYn556TC/IMG-3318.jpg",
+      "description": "Pain au chocolat pur beurre avec deux bâtonnets de chocolat"
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Jus d'Orange Pressé",
+      "price": 5.5,
+      "image": "https://i.ibb.co/4Rm08B06/4d19e967-5b25-4720-908a-1574ba7d9d2f.jpg",
+      "description": "Des oranges fraîches pressées à la commande."
+    },
+    {
+      "category": "🧃 Boisson fraîche",
+      "title": "Citronnade",
+      "price": 3.5,
+      "image": "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?q=80&w=800&auto=format&fit=crop",
+      "description": "Rafraîchissante, pas trop sucré et fait maison"
+    },
+    {
+      "category": "🍰 Gâteaux et tartes",
+      "title": "Fraisier madelina",
+      "price": 9,
+      "description": "Biscuit moelleux, crème mousseline vanillée et fraises fraîches de saison. Notre pâtisserie signature.",
+      "image": "https://images.unsplash.com/photo-1565958011703-44f9829ba187?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "🍰 Gâteaux et tartes",
+      "title": "Tarte au Citron Meringuée",
+      "price": 8,
+      "description": "Pâte sablée maison, crème citronnée acidulée et meringue italienne dorée au chalumeau.",
+      "image": "https://images.unsplash.com/photo-1519915028121-7d3463d20b13?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "🍰 Gâteaux et tartes",
+      "title": "Éclair au Chocolat",
+      "price": 6.5,
+      "description": "Pâte à choux légère, crème pâtissière au chocolat noir et glaçage brillant. Un classique de la maison.",
+      "image": "https://images.unsplash.com/photo-1603532648955-039310d9ed75?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "🍽️ Plats",
+      "title": "Le Grand Petit Déjeuner",
+      "price": 17.5,
+      "description": "Œufs brouillés, saucisses artisanales, haricots blancs en sauce, salade fraîche et toasts grillés au beurre.",
+      "image": "https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "🍽️ Plats",
+      "title": "Avocado Toast madelina",
+      "price": 13,
+      "description": "Pain de campagne grillé, avocat frais écrasé, œuf poché, graines de sésame et vinaigrette citron.",
+      "image": "https://images.unsplash.com/photo-1588137378633-dea1336ce1e2?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "🍽️ Plats",
+      "title": "Croque Madame",
+      "price": 11,
+      "description": "Pain brioché, jambon artisanal, béchamel maison, gruyère fondu et œuf au plat. Le classique revisité.",
+      "image": "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?q=80&w=800&auto=format&fit=crop"
+    },
+    {
+      "category": "✨ Autres",
+      "title": "Cookies Maison aux Pépites",
+      "price": 3,
+      "description": "Nos généreux cookies artisanaux aux éclats de chocolat noir fondant.",
+      "image": "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=800&auto=format&fit=crop"
+    }
+  ]
+}
