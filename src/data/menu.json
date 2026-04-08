@@ -1,6 +1,13 @@
 {
   "plats": [
     {
+      "category": "☕ Boisson chaude",
+      "title": "Plat Test Browser",
+      "price": 10,
+      "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
+      "description": "test1"
+    },
+    {
       "category": "🥐 Viennoiseries",
       "title": "Danish à la fraise",
       "price": 4,
