@@ -767,7 +767,6 @@
           <div class="filter-tabs" id="filter-tabs"></div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-secondary" onclick="exportJSON()">⬇ Exporter JSON</button>
           <button class="btn btn-primary" id="save-btn" onclick="saveToFile()">💾 Sauvegarder</button>
         </div>
       </div>
@@ -1279,16 +1278,6 @@
       toast('🗑️ Plat supprimé — pensez à sauvegarder !', 'success');
     }
 
-    // ── EXPORT JSON (backup) ──
-    function exportJSON() {
-      const json = JSON.stringify(menuData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'menu.json';
-      a.click();
-      toast('⬇ Backup téléchargé !', 'success');
-    }
 
     // ── SAVE: GitHub API (remote) or Vite API (local) ──
     async function saveToFile() {
