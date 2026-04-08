@@ -25,7 +25,7 @@ const reviews = [
 export const Reviews = () => (
   <section
     id="reviews"
-    style={{ background: '#2A2118', padding: '7rem 1.5rem', position: 'relative', overflow: 'hidden' }}
+    style={{ background: '#2A2118', paddingTop: '7rem', paddingBottom: '2.5rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', position: 'relative', overflow: 'hidden' }}
   >
     {/* Subtle ambient glow */}
     <div

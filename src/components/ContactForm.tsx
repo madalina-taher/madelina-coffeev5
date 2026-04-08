@@ -23,7 +23,7 @@ const infoItems = [
 export const ContactForm = () => (
   <section
     id="contact"
-    style={{ background: '#F2E9E1', padding: '7rem 1.5rem', position: 'relative', overflow: 'hidden' }}
+    style={{ background: '#F2E9E1', paddingTop: '4rem', paddingBottom: '7rem', paddingLeft: '1.5rem', paddingRight: '1.5rem', position: 'relative', overflow: 'hidden' }}
   >
     {/* background circle accent */}
     <div
@@ -43,10 +43,10 @@ export const ContactForm = () => (
 
         {/* ── Left: info ── */}
         <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true, margin: "150px" }}
-          transition={{ duration: 0.6 }}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
           <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
             Nous Trouver
@@ -118,8 +118,8 @@ export const ContactForm = () => (
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true, margin: "150px" }}
-          transition={{ duration: 0.6 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
           style={{
             borderRadius: '2rem',
             overflow: 'hidden',
