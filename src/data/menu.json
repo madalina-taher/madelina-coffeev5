@@ -1,11 +1,10 @@
 {
   "plats": [
     {
-      "category": "☕ Boisson chaude",
+      "category": "🧃 Boisson fraîche",
       "title": "Plat Test Browser",
-      "price": 10,
-      "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800",
-      "description": "test1"
+      "price": 999999,
+      "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800"
     },
     {
       "category": "🥐 Viennoiseries",
