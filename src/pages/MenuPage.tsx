@@ -114,7 +114,7 @@ const MenuPage = () => {
   // Defer it to not block the main thread and avoid FPS drops
   useEffect(() => {
     if (!plats || plats.length === 0) return;
-    
+
     const prefetchImages = () => {
       plats.forEach(item => {
         if (item.image) {
@@ -165,9 +165,8 @@ const MenuPage = () => {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`relative px-4 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3 rounded-full text-[10px] sm:text-[11px] md:text-[12px] font-bold uppercase tracking-widest transition-colors ${
-                    activeTab === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
-                  }`}
+                  className={`relative px-4 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3 rounded-full text-[10px] sm:text-[11px] md:text-[12px] font-bold uppercase tracking-widest transition-colors ${activeTab === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
+                    }`}
                 >
                   {activeTab === cat && (
                     <motion.div
@@ -186,7 +185,7 @@ const MenuPage = () => {
           <div className={`transition-opacity duration-200 min-h-[50vh] ${isPending ? 'opacity-50' : 'opacity-100'}`}>
             {categories.map((cat) => {
               if (activeCategory !== cat) return null;
-              
+
               const drinkLike = isCategoryDrinkLike(cat);
               const itemsInCat = plats.filter(item => item.category === cat);
               return (
