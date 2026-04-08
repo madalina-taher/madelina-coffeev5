@@ -1021,10 +1021,12 @@
     }
 
     // ── RENDER ──
+    // Master render: builds everything from scratch (called after data load, add, edit, delete)
     function render() {
       renderStats();
       renderFilters();
-      renderTable();
+      buildTable();     // Build ALL rows once
+      applyFilter();    // Show/hide rows based on activeFilter
     }
 
     function renderStats() {
@@ -1040,20 +1042,21 @@
     `;
     }
 
+    const CATEGORY_ORDER = [
+      "☕ Boisson chaude",
+      "🥐 Viennoiseries",
+      "🧃 Boisson fraîche",
+      "🍰 Gâteaux et tartes",
+      "🍽️ Plats",
+      "✨ Autres"
+    ];
+
     function renderFilters() {
       const plats = menuData.plats || [];
-      const order = [
-        "☕ Boisson chaude",
-        "🥐 Viennoiseries",
-        "🧃 Boisson fraîche",
-        "🍰 Gâteaux et tartes",
-        "🍽️ Plats",
-        "✨ Autres"
-      ];
       const catsSet = Array.from(new Set(plats.map(p => p.category)));
       const sortedCats = catsSet.sort((a, b) => {
-        const indexA = order.indexOf(a);
-        const indexB = order.indexOf(b);
+        const indexA = CATEGORY_ORDER.indexOf(a);
+        const indexB = CATEGORY_ORDER.indexOf(b);
         if (indexA === -1 && indexB === -1) return a.localeCompare(b);
         if (indexA === -1) return 1;
         if (indexB === -1) return -1;
@@ -1063,52 +1066,86 @@
       const labels = { all: 'Tous' };
 
       document.getElementById('filter-tabs').innerHTML = cats.map(c => `
-      <button class="filter-tab ${activeFilter === c ? 'active' : ''}" onclick="setFilter('${c.replace(/'/g, "\\'")}')">
+      <button class="filter-tab ${activeFilter === c ? 'active' : ''}" data-filter-cat="${c}" onclick="setFilter('${c.replace(/'/g, "\\'")}')">
         ${labels[c] || c}
       </button>
     `).join('');
     }
 
+    // ── INSTANT FILTER (no DOM rebuild!) ──
     function setFilter(cat) {
       activeFilter = cat;
-      render();
+
+      // 1) Update filter tab active state (CSS only — no innerHTML rebuild)
+      document.querySelectorAll('.filter-tab').forEach(btn => {
+        const btnCat = btn.getAttribute('data-filter-cat');
+        if (btnCat === cat) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // 2) Show/hide rows instantly (CSS display toggle — zero DOM destruction)
+      applyFilter();
     }
 
-    function renderTable() {
+    // Toggle row visibility based on activeFilter — INSTANT, no rebuilding
+    function applyFilter() {
+      const tbody = document.getElementById('menu-tbody');
+      const rows = tbody.querySelectorAll('tr[data-cat]');
+      const emptyRow = document.getElementById('empty-row');
+      let visibleCount = 0;
+
+      rows.forEach(row => {
+        const rowCat = row.getAttribute('data-cat');
+        if (activeFilter === 'all' || rowCat === activeFilter) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      // Show/hide empty state
+      if (emptyRow) {
+        emptyRow.style.display = visibleCount === 0 ? '' : 'none';
+      }
+    }
+
+    // ── BUILD TABLE ONCE ──
+    // Creates all rows with data-cat attributes. Called once on load and after data mutations.
+    function buildTable() {
       const plats = menuData.plats || [];
-      const order = [
-        "☕ Boisson chaude",
-        "🥐 Viennoiseries",
-        "🧃 Boisson fraîche",
-        "🍰 Gâteaux et tartes",
-        "🍽️ Plats",
-        "✨ Autres"
-      ];
-      const filtered = activeFilter === 'all' 
-        ? plats.slice().sort((a, b) => {
-            const indexA = order.indexOf(a.category);
-            const indexB = order.indexOf(b.category);
-            if (indexA === -1 && indexB === -1) return a.category.localeCompare(b.category);
-            if (indexA === -1) return 1;
-            if (indexB === -1) return -1;
-            return indexA - indexB;
-          })
-        : plats.filter(p => p.category === activeFilter);
       const tbody = document.getElementById('menu-tbody');
 
-      if (!filtered.length) {
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state">Aucun plat dans cette catégorie.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td></tr>`;
+      if (!plats.length) {
+        tbody.innerHTML = `<tr id="empty-row"><td colspan="5"><div class="empty-state">Aucun plat dans cette catégorie.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td></tr>`;
         return;
       }
 
-      tbody.innerHTML = filtered.map((item, visIdx) => {
-        const realIdx = plats.indexOf(item);
+      // Sort items by category order for the "all" view
+      const sorted = plats.map((item, idx) => ({ item, idx })).sort((a, b) => {
+        const indexA = CATEGORY_ORDER.indexOf(a.item.category);
+        const indexB = CATEGORY_ORDER.indexOf(b.item.category);
+        if (indexA === -1 && indexB === -1) return a.item.category.localeCompare(b.item.category);
+        if (indexA === -1) return 1;
+        if (indexB === -1) return -1;
+        return indexA - indexB;
+      });
+
+      // Build all rows at once using a DocumentFragment (avoids layout thrashing)
+      const fragment = document.createDocumentFragment();
+
+      sorted.forEach(({ item, idx }) => {
         const price = typeof item.price === 'number' ? item.price.toFixed(1) : item.price;
-        return `
-        <tr>
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-cat', item.category);
+        tr.setAttribute('data-real-idx', idx);
+        tr.innerHTML = `
           <td class="td-img">
             <img src="${item.image || 'https://via.placeholder.com/52'}" alt="${item.title}"
-              onerror="this.src='https://via.placeholder.com/52x52?text=?'" />
+              onerror="this.src='https://via.placeholder.com/52x52?text=?'" loading="lazy" />
           </td>
           <td>
             <div class="td-title">${item.title}</div>
@@ -1118,13 +1155,24 @@
           <td class="td-price">${price} DT</td>
           <td>
             <div class="td-actions">
-              <button class="btn btn-secondary btn-sm" onclick="openModal(${realIdx})">✏️ Modifier</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteItem(${realIdx})">✕</button>
+              <button class="btn btn-secondary btn-sm" onclick="openModal(${idx})">✏️ Modifier</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteItem(${idx})">✕</button>
             </div>
           </td>
-        </tr>
-      `;
-      }).join('');
+        `;
+        fragment.appendChild(tr);
+      });
+
+      // Add empty state row (hidden by default, shown when filter yields 0)
+      const emptyTr = document.createElement('tr');
+      emptyTr.id = 'empty-row';
+      emptyTr.style.display = 'none';
+      emptyTr.innerHTML = `<td colspan="5"><div class="empty-state">Aucun plat dans cette catégorie.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td>`;
+      fragment.appendChild(emptyTr);
+
+      // Single DOM write — replaces everything at once
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
     }
 
     // ── MODAL ──
