@@ -62,7 +62,7 @@ export const Footer = () => {
               {[
                 { label: 'Accueil',   href: '/'        },
                 { label: 'Le Menu',   href: '/menu'    },
-                { label: "L'Atelier", href: '/#atelier' },
+                { label: "L'Atelier", href: '/#our-story' },
                 { label: 'Contact',   href: '/#contact' },
               ].map((link) => (
                 <li key={link.href}>

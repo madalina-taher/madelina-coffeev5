@@ -16,7 +16,7 @@ const infoItems = [
   {
     icon: <Clock size={18} strokeWidth={1.5} />,
     label: 'Horaires',
-    value: '07:00 — 23:00 · Tous les jours',
+    value: '07:00 — 23:00 · Mar—Dim',
   },
 ];
 
@@ -43,51 +43,39 @@ export const ContactForm = () => (
 
         {/* ── Left: info ── */}
         <motion.div
-          initial="hidden"
-          whileInView="visible"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.2 }}
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.12 } }
-          }}
+          transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
         >
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}>
-            <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
-              Nous Trouver
-            </span>
-          </motion.div>
+          <span style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase', color: '#A64B2A', fontWeight: 500 }}>
+            Nous Trouver
+          </span>
 
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}>
-            <h2 style={{ fontFamily: '"Allenoire",serif', fontSize: 'clamp(2rem,5vw,3.5rem)', color: '#2A2118', marginTop: '0.875rem', marginBottom: '1.25rem', lineHeight: 1.1 }}>
-              Venez nous
-              <br />
-              <span style={{ color: '#A64B2A' }}>Rendre Visite</span>
-            </h2>
-          </motion.div>
+          <h2 style={{ fontFamily: '"Allenoire",serif', fontSize: 'clamp(2rem,5vw,3.5rem)', color: '#2A2118', marginTop: '0.875rem', marginBottom: '1.25rem', lineHeight: 1.1 }}>
+            Venez nous
+            <br />
+            <span style={{ color: '#A64B2A' }}>Rendre Visite</span>
+          </h2>
 
           {/* divider */}
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-              <span style={{ height: '1px', width: '3rem', background: '#A64B2A', opacity: 0.25 }} />
-              <svg width="16" height="21" viewBox="0 0 100 130" fill="none" aria-hidden="true">
-                <path d="M10 130 V52 Q10 10 50 10 Q90 10 90 52 V130 Z" stroke="#A64B2A" strokeWidth="7" fill="none" opacity="0.4"/>
-              </svg>
-              <span style={{ height: '1px', flex: 1, background: '#A64B2A', opacity: 0.25 }} />
-            </div>
-          </motion.div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
+            <span style={{ height: '1px', width: '3rem', background: '#A64B2A', opacity: 0.25 }} />
+            <svg width="16" height="21" viewBox="0 0 100 130" fill="none" aria-hidden="true">
+              <path d="M10 130 V52 Q10 10 50 10 Q90 10 90 52 V130 Z" stroke="#A64B2A" strokeWidth="7" fill="none" opacity="0.4"/>
+            </svg>
+            <span style={{ height: '1px', flex: 1, background: '#A64B2A', opacity: 0.25 }} />
+          </div>
 
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}>
-            <p style={{ fontFamily: '"Inter",sans-serif', color: '#7A6A5A', fontSize: '1.0625rem', lineHeight: 1.8, maxWidth: '30rem', marginBottom: '2.5rem' }}>
-              Une commande spéciale, une réservation ou simplement l&rsquo;envie de partager un moment gourmand ? Passez nous voir ou appelez-nous.
-            </p>
-          </motion.div>
+          <p style={{ fontFamily: '"Inter",sans-serif', color: '#7A6A5A', fontSize: '1.0625rem', lineHeight: 1.8, maxWidth: '30rem', marginBottom: '2.5rem' }}>
+            Une commande spéciale, une réservation ou simplement l&rsquo;envie de partager un moment gourmand ? Passez nous voir ou appelez-nous.
+          </p>
 
           {/* Info cards */}
           <div className="space-y-4">
             {infoItems.map((item) => (
-              <motion.div
+              <div
                 key={item.label}
-                variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }}
                 id={`contact-${item.label.toLowerCase()}`}
                 style={{
                   display: 'flex',
@@ -109,12 +97,12 @@ export const ContactForm = () => (
                     : <p style={{ fontFamily: '"Inter",sans-serif', fontSize: '0.9375rem', color: '#2A2118', fontWeight: 500 }}>{item.value}</p>
                   }
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* CTA */}
-          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } } }} style={{ marginTop: '2.5rem' }}>
+          <div style={{ marginTop: '2.5rem' }}>
             <a
               href="tel:72413676"
               id="contact-call-btn"
@@ -123,7 +111,7 @@ export const ContactForm = () => (
               <Phone size={16} strokeWidth={1.5} />
               Appeler Maintenant
             </a>
-          </motion.div>
+          </div>
         </motion.div>
 
         {/* ── Right: Google Map ── */}
