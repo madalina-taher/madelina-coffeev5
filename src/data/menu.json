@@ -1,6 +1,12 @@
 {
   "plats": [
     {
+      "category": "🍽️ Plats",
+      "title": "autre test",
+      "price": 12345,
+      "image": "https://i.ibb.co/MxBSbyqt/inspiration-menu-qr-table.jpg"
+    },
+    {
       "category": "🍰 Gâteaux et tartes",
       "title": "fewrtg",
       "price": 24534324,
