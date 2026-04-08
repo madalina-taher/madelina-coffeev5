@@ -5,6 +5,7 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import MenuPage from './pages/MenuPage';
+import AdminPage from './pages/AdminPage';
 
 // Scroll to #hash after navigation
 function ScrollToHash() {
@@ -31,8 +32,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<><Header /><Home /><Footer /></>} />
           <Route path="/menu" element={<MenuPage />} />
-          
-          {/* Ma n7ottouch path="/admin" houni bech ma ysirch conflict m3a el static files */}
+          <Route path="/admin" element={<AdminPage />} />
           
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
