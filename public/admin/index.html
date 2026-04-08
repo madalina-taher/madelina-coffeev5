@@ -948,8 +948,11 @@
           } else {
             const errData = await res.json().catch(() => ({}));
             let msg = `Erreur ${res.status}`;
-            if (res.status === 401) msg = 'Token invalide ou expiré';
-            if (res.status === 404) msg = 'Dépôt introuvable ou problème de droits (contents:read)';
+            if (res.status === 401) msg = 'Token invalide ou expiré — régénérez-le sur GitHub';
+            else if (res.status === 403 || (errData.message && errData.message.toLowerCase().includes('not accessible')))
+              msg = 'Token sans les bonnes permissions! Régénérez le token avec "Contents: Read and write"';
+            else if (res.status === 404) msg = 'Dépôt introuvable — vérifiez owner/repo dans ⚙️';
+            else if (errData.message) msg = errData.message;
             throw new Error(msg);
           }
         } catch (e) {
@@ -1262,18 +1265,56 @@
           // ── GITHUB API SAVE ──
           const jsonStr = JSON.stringify(menuData, null, 2);
           const bytes = new TextEncoder().encode(jsonStr);
-          const content = btoa(String.fromCharCode(...bytes));
+          // Handle large files safely — btoa can fail on large payloads
+          let content;
+          try {
+            content = btoa(String.fromCharCode(...bytes));
+          } catch (e) {
+            // Fallback for large files: chunk the conversion
+            let binary = '';
+            for (let i = 0; i < bytes.length; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            content = btoa(binary);
+          }
 
-          // Get latest SHA if we don't have it
-          if (!fileSHA) {
+          // Always fetch the latest SHA before saving to avoid 409 conflicts
+          try {
             const shaRes = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
-              headers: { 'Authorization': `Bearer ${gh.token}`, 'Accept': 'application/vnd.github.v3+json' }
+              headers: { 'Authorization': `Bearer ${gh.token}`, 'Accept': 'application/vnd.github.v3+json' },
+              cache: 'no-store'
             });
             if (shaRes.ok) {
               const shaData = await shaRes.json();
               fileSHA = shaData.sha;
+            } else if (shaRes.status === 404) {
+              // File doesn't exist yet — fileSHA stays null (will create new file)
+              fileSHA = null;
+            } else {
+              const errData = await shaRes.json().catch(() => ({}));
+              const errMsg = errData.message || `HTTP ${shaRes.status}`;
+              // Check for token permission issues on read
+              if (shaRes.status === 403 || errMsg.toLowerCase().includes('not accessible')) {
+                throw new Error(
+                  'Token non autorisé! Allez sur GitHub → Settings → Developer settings → ' +
+                  'Personal access tokens → Régénérez le token avec la permission "Contents: Read and write"'
+                );
+              }
+              throw new Error(`Erreur SHA: ${errMsg}`);
             }
+          } catch (shaErr) {
+            if (shaErr.message.includes('Token non autorisé')) throw shaErr;
+            console.warn('SHA fetch failed:', shaErr);
+            // Continue with existing SHA if we have one
+            if (!fileSHA) throw new Error('Impossible de récupérer le SHA du fichier: ' + shaErr.message);
           }
+
+          const putBody = {
+            message: `🍽️ Menu mis à jour (${menuData.plats.length} plats)`,
+            content: content,
+          };
+          // Only include SHA if file already exists (omit for new file creation)
+          if (fileSHA) putBody.sha = fileSHA;
 
           const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
             method: 'PUT',
@@ -1282,16 +1323,29 @@
               'Accept': 'application/vnd.github.v3+json',
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              message: `🍽️ Menu mis à jour (${menuData.plats.length} plats)`,
-              content: content,
-              sha: fileSHA,
-            }),
+            body: JSON.stringify(putBody),
           });
 
           if (!res.ok) {
-            const errData = await res.json();
-            throw new Error(errData.message || `GitHub API error ${res.status}`);
+            const errData = await res.json().catch(() => ({}));
+            const errMsg = errData.message || `GitHub API error ${res.status}`;
+
+            // ── SPECIFIC ERROR HANDLING ──
+            if (res.status === 403 || errMsg.toLowerCase().includes('not accessible') || errMsg.toLowerCase().includes('resource not accessible')) {
+              throw new Error(
+                'Token sans permission d\'écriture! Créez un nouveau token sur GitHub → Settings → ' +
+                'Developer settings → Fine-grained tokens → Permission "Contents: Read and write" → ' +
+                'puis mettez-le à jour dans ⚙️ Paramètres'
+              );
+            }
+            if (res.status === 409) {
+              // SHA conflict — someone else pushed in the meantime
+              throw new Error('Conflit de version! Rechargez la page et réessayez.');
+            }
+            if (res.status === 422) {
+              throw new Error('Erreur de validation: ' + errMsg + ' — Essayez de recharger la page.');
+            }
+            throw new Error(errMsg);
           }
 
           const result = await res.json();
