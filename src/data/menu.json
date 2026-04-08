@@ -1,35 +1,18 @@
 {
   "plats": [
     {
-      "category": "✨ Autres",
-      "title": "oooo",
-      "price": 4235,
-      "image": "https://i.ibb.co/MkVFZPXS/logo-madelina-1.jpg"
-    },
-    {
-      "category": "🥐 Viennoiseries",
-      "title": "viiiiiiiiiiiiii",
-      "price": 1.2,
-      "image": "https://i.ibb.co/Xf3ZFB8H/Chat-GPT-Image-Apr-2-2026-at-12-07-52-AM.png"
-    },
-    {
       "category": "🍽️ Plats",
       "title": "autre test",
-      "price": 12345,
-      "image": "https://i.ibb.co/MxBSbyqt/inspiration-menu-qr-table.jpg"
+      "price": 111111111,
+      "image": "https://i.ibb.co/MxBSbyqt/inspiration-menu-qr-table.jpg",
+      "description": "111111111"
     },
     {
       "category": "🍰 Gâteaux et tartes",
       "title": "fewrtg",
       "price": 24534324,
       "image": "https://i.ibb.co/9mFYH30X/example1-table.jpg",
-      "description": "vfs"
-    },
-    {
-      "category": "🧃 Boisson fraîche",
-      "title": "Plat Test Browser",
-      "price": 999999,
-      "image": "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800"
+      "description": "testttttttttttt00000000"
     },
     {
       "category": "🥐 Viennoiseries",
