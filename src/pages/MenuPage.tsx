@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, memo } from 'react';
+import { useState, useEffect, useCallback, memo, useTransition } from 'react';
 import menuData from '../data/menu.json';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '../components/Header';
@@ -106,34 +106,39 @@ const categories = Array.from(new Set(plats.map(item => item.category)))
 const MenuPage = () => {
 
   const [activeCategory, setActiveCategory] = useState(categories[0] || "");
+  const [activeTab, setActiveTab] = useState(categories[0] || "");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   // Force hardcore prefetch of ALL images natively into browser RAM cache in background
+  // Defer it to not block the main thread and avoid FPS drops
   useEffect(() => {
-    // Only prefetch if we have plats
     if (!plats || plats.length === 0) return;
     
-    // We run it with a slight delay so it doesn't block the initial page paint
-    const timer = setTimeout(() => {
+    const prefetchImages = () => {
       plats.forEach(item => {
         if (item.image) {
           const img = new Image();
           img.src = item.image;
         }
       });
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, [plats]);
+    };
 
-  // We no longer filter here; we render everything and hide via CSS.
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(prefetchImages);
+    } else {
+      setTimeout(prefetchImages, 500);
+    }
+  }, []);
+
   // We compute whether a category is drink-like to apply the correct grid structure per category.
   const isCategoryDrinkLike = (cat: string) => cat.includes("Boisson") || cat.includes("Viennoiserie");
 
-  const isDrinkLike = activeCategory.includes("Boisson") || activeCategory.includes("Viennoiserie");
-
   const handleCategoryChange = useCallback((cat: string) => {
-    setActiveCategory(cat);
+    setActiveTab(cat);
+    startTransition(() => {
+      setActiveCategory(cat);
+    });
   }, []);
 
   const openModal = useCallback((item: MenuItem) => setSelectedItem(item), []);
@@ -161,10 +166,10 @@ const MenuPage = () => {
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
                   className={`relative px-4 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3 rounded-full text-[10px] sm:text-[11px] md:text-[12px] font-bold uppercase tracking-widest transition-colors ${
-                    activeCategory === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
+                    activeTab === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
                   }`}
                 >
-                  {activeCategory === cat && (
+                  {activeTab === cat && (
                     <motion.div
                       layoutId="activeTab"
                       className="absolute inset-0 bg-madelina-navy rounded-full shadow-lg"
@@ -177,20 +182,18 @@ const MenuPage = () => {
             </div>
           )}
 
-          {/* Items Grid/List — completely instant via CSS display toggle */}
-          <div>
+          {/* Items Grid/List — Only render active category to avert major DOM relayouts */}
+          <div className={`transition-opacity duration-200 min-h-[50vh] ${isPending ? 'opacity-50' : 'opacity-100'}`}>
             {categories.map((cat) => {
+              if (activeCategory !== cat) return null;
+              
               const drinkLike = isCategoryDrinkLike(cat);
               const itemsInCat = plats.filter(item => item.category === cat);
               return (
                 <div
                   key={cat}
-                  style={activeCategory === cat ? { animation: 'fadeIn 0.25s ease-out' } : undefined}
-                  className={
-                    activeCategory === cat
-                      ? drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"
-                      : "hidden"
-                  }
+                  style={{ animation: 'fadeIn 0.25s ease-out' }}
+                  className={drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"}
                 >
                   {itemsInCat.map((item) =>
                     drinkLike ? (
