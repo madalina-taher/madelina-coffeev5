@@ -1,6 +1,18 @@
 {
   "plats": [
     {
+      "category": "✨ Autres",
+      "title": "oooo",
+      "price": 4235,
+      "image": "https://i.ibb.co/MkVFZPXS/logo-madelina-1.jpg"
+    },
+    {
+      "category": "🥐 Viennoiseries",
+      "title": "viiiiiiiiiiiiii",
+      "price": 1.2,
+      "image": "https://i.ibb.co/Xf3ZFB8H/Chat-GPT-Image-Apr-2-2026-at-12-07-52-AM.png"
+    },
+    {
       "category": "🍽️ Plats",
       "title": "autre test",
       "price": 12345,
