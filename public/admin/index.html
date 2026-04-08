@@ -1114,7 +1114,8 @@
     }
 
     // ── BUILD TABLE ONCE ──
-    // Creates all rows with data-cat attributes. Called once on load and after data mutations.
+    // Creates all rows in the original menu.json order (insertion order).
+    // Each row gets hidden data attributes: data-id, data-cat, data-real-idx.
     function buildTable() {
       const plats = menuData.plats || [];
       const tbody = document.getElementById('menu-tbody');
@@ -1124,24 +1125,15 @@
         return;
       }
 
-      // Sort items by category order for the "all" view
-      const sorted = plats.map((item, idx) => ({ item, idx })).sort((a, b) => {
-        const indexA = CATEGORY_ORDER.indexOf(a.item.category);
-        const indexB = CATEGORY_ORDER.indexOf(b.item.category);
-        if (indexA === -1 && indexB === -1) return a.item.category.localeCompare(b.item.category);
-        if (indexA === -1) return 1;
-        if (indexB === -1) return -1;
-        return indexA - indexB;
-      });
-
-      // Build all rows at once using a DocumentFragment (avoids layout thrashing)
+      // Build all rows in their ORIGINAL order (no sorting — preserves insertion order)
       const fragment = document.createDocumentFragment();
 
-      sorted.forEach(({ item, idx }) => {
+      plats.forEach((item, idx) => {
         const price = typeof item.price === 'number' ? item.price.toFixed(1) : item.price;
         const tr = document.createElement('tr');
-        tr.setAttribute('data-cat', item.category);
-        tr.setAttribute('data-real-idx', idx);
+        tr.setAttribute('data-id', idx);          // Hidden unique ID
+        tr.setAttribute('data-cat', item.category); // For instant filtering
+        tr.setAttribute('data-real-idx', idx);     // Real index in menuData.plats
         tr.innerHTML = `
           <td class="td-img">
             <img src="${item.image || 'https://via.placeholder.com/52'}" alt="${item.title}"
