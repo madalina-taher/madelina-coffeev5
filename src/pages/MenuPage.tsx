@@ -246,7 +246,7 @@ const MenuPage = () => {
                     <motion.div
                       layoutId="activeTab"
                       className="absolute inset-0 bg-madelina-navy rounded-full shadow-lg"
-                      transition={{ type: "spring", stiffness: 350, damping: 35, mass: 0.8 }}
+                      transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
                     />
                   )}
                   <span className="relative z-10">{cat}</span>
