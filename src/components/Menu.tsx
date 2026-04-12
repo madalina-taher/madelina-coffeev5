@@ -45,10 +45,29 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const handleCategoryChange = (cat: string) => {
     if (activeCategory === cat) return;
     setIsCategoryLoading(true);
-    setTimeout(() => {
+
+    const itemsInCat = plats.filter(item => item.category === cat);
+    const imagesToLoad = itemsInCat.map(item => item.image).filter(Boolean) as string[];
+
+    if (imagesToLoad.length === 0) {
+      setTimeout(() => {
+        setActiveCategory(cat);
+        setIsCategoryLoading(false);
+      }, 50);
+      return;
+    }
+
+    Promise.all(imagesToLoad.map(url => {
+      return new Promise(resolve => {
+        const img = new window.Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = resolve; 
+      });
+    })).then(() => {
       setActiveCategory(cat);
       setIsCategoryLoading(false);
-    }, 50);
+    });
   };
 
   // Fetch menu-data.html from GitHub Raw API on mount

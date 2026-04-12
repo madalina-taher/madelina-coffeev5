@@ -200,14 +200,35 @@ const MenuPage = () => {
     setActiveTab(cat);
     setIsCategoryLoading(true);
     
-    // Give the browser 50ms to paint the loader before freezing the thread with a heavy React render
-    setTimeout(() => {
+    // Find images for this category
+    const itemsInCat = plats.filter(item => item.category === cat);
+    const imagesToLoad = itemsInCat.map(item => item.image).filter(Boolean) as string[];
+
+    if (imagesToLoad.length === 0) {
+      setTimeout(() => {
+        startTransition(() => {
+          setActiveCategory(cat);
+          setIsCategoryLoading(false);
+        });
+      }, 50);
+      return;
+    }
+
+    // Preload images and wait for them to finish before removing loader
+    Promise.all(imagesToLoad.map(url => {
+      return new Promise(resolve => {
+        const img = new window.Image();
+        img.src = url;
+        img.onload = resolve;
+        img.onerror = resolve; // Continue even if an image fails to load
+      });
+    })).then(() => {
       startTransition(() => {
         setActiveCategory(cat);
         setIsCategoryLoading(false);
       });
-    }, 50);
-  }, [activeTab]);
+    });
+  }, [activeTab, plats]);
 
   const openModal = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
