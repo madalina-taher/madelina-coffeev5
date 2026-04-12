@@ -38,8 +38,20 @@ const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
 export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
+  // 3-second delayed loader
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      timer = setTimeout(() => setShowLoader(true), 3000);
+    } else {
+      setShowLoader(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
@@ -87,8 +99,13 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
 
   if (loading || plats.length === 0) {
     return (
-      <div className="text-center py-20 font-display text-madelina-navy/30">
-        Chargement de la carte madelina...
+      <div className="text-center py-20 min-h-[50vh] flex items-center justify-center">
+        {showLoader && (
+          <div className="flex flex-col items-center animate-fadeIn">
+            <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
+            <div className="font-display text-madelina-navy/40">Chargement...</div>
+          </div>
+        )}
       </div>
     );
   }
@@ -127,18 +144,13 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`relative px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${
-                  activeCategory === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
+                className={`relative px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${
+                  activeCategory === cat 
+                    ? 'bg-madelina-navy text-white shadow-lg scale-105' 
+                    : 'bg-transparent text-madelina-navy hover:text-madelina-terracotta hover:bg-madelina-navy/5'
                 }`}
               >
-                {activeCategory === cat && (
-                  <motion.div 
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-madelina-navy rounded-full shadow-lg"
-                    transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
-                  />
-                )}
-                <span className="relative z-10">{cat}</span>
+                {cat}
               </button>
             ))}
           </div>

@@ -120,10 +120,22 @@ const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
 const MenuPage = () => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showLoader, setShowLoader] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
   const [activeTab, setActiveTab] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // 3-second delayed loader
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (loading) {
+      timer = setTimeout(() => setShowLoader(true), 3000);
+    } else {
+      setShowLoader(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
@@ -209,8 +221,13 @@ const MenuPage = () => {
       <div className="min-h-screen flex flex-col bg-white">
         <Header />
         <main className="flex-grow pt-28 pb-20 relative overflow-hidden">
-          <div className="text-center py-20 font-display text-madelina-navy/30">
-            Chargement de la carte madelina...
+          <div className="min-h-[50vh] flex items-center justify-center">
+            {showLoader && (
+              <div className="flex flex-col items-center animate-fadeIn">
+                <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
+                <div className="font-display text-madelina-navy/40">Chargement...</div>
+              </div>
+            )}
           </div>
         </main>
         <Footer />
@@ -239,17 +256,13 @@ const MenuPage = () => {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`relative px-4 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3 rounded-full text-[10px] sm:text-[11px] md:text-[12px] font-bold uppercase tracking-widest transition-colors ${activeTab === cat ? 'text-white' : 'text-madelina-navy hover:text-madelina-terracotta'
-                    }`}
+                  className={`relative px-4 py-2 sm:px-6 sm:py-2.5 md:px-8 md:py-3 rounded-full text-[10px] sm:text-[11px] md:text-[12px] font-bold uppercase tracking-widest transition-all duration-200 ${
+                    activeTab === cat 
+                      ? 'bg-madelina-navy text-white shadow-lg scale-105' 
+                      : 'bg-transparent text-madelina-navy hover:text-madelina-terracotta hover:bg-madelina-navy/5'
+                  }`}
                 >
-                  {activeTab === cat && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-madelina-navy rounded-full shadow-lg"
-                      transition={{ type: "tween", ease: "easeOut", duration: 0.25 }}
-                    />
-                  )}
-                  <span className="relative z-10">{cat}</span>
+                  {cat}
                 </button>
               ))}
             </div>
