@@ -38,20 +38,18 @@ const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
 export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
-  // 3-second delayed loader
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (loading) {
-      timer = setTimeout(() => setShowLoader(true), 3000);
-    } else {
-      setShowLoader(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
+  const handleCategoryChange = (cat: string) => {
+    if (activeCategory === cat) return;
+    setIsCategoryLoading(true);
+    setTimeout(() => {
+      setActiveCategory(cat);
+      setIsCategoryLoading(false);
+    }, 50);
+  };
 
   // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
@@ -93,20 +91,18 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
     return () => clearTimeout(timer);
   }, [plats]);
 
-  const filteredItems = isPreview 
-    ? plats.slice(0, 3) 
-    : plats.filter(item => item.category === activeCategory);
-
-  if (loading || plats.length === 0) {
+  if (loading || (plats.length > 0 && isCategoryLoading && !isPreview)) {
     return (
-      <div className="text-center py-20 min-h-[50vh] flex items-center justify-center">
-        {showLoader && (
-          <div className="flex flex-col items-center animate-fadeIn">
-            <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
-            <div className="font-display text-madelina-navy/40">Chargement...</div>
+      <section id="menu" className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6">
+          <div className="min-h-[50vh] flex items-center justify-center">
+            <div className="flex flex-col items-center animate-fadeIn">
+              <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
+              <div className="font-display text-madelina-navy/40">Chargement...</div>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
     );
   }
 
@@ -143,7 +139,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
             {categories.map((cat) => (
               <button
                 key={cat}
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
                 className={`relative px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all duration-200 ${
                   activeCategory === cat 
                     ? 'bg-madelina-navy text-white shadow-lg scale-105' 
@@ -157,42 +153,52 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
         )}
 
           <div className="px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {categories.map(cat => {
-              const catItems = isPreview ? plats.filter(item => item.category === cat).slice(0, 3) : plats.filter(item => item.category === cat);
-              return (
-                <div key={cat} className={activeCategory === cat ? "contents" : "hidden"} style={activeCategory === cat ? { animation: 'fadeIn 0.25s ease-out' } : undefined}>
-                  {catItems.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="group glass-card rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white border border-madelina-terracotta/5"
-                    >
-                      <div className="relative h-72 overflow-hidden">
-                        <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="eager" fetchPriority="high" decoding="async" />
-                        <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg">
-                          <span className="font-bold text-madelina-terracotta tracking-tight">
-                            {typeof item.price === 'number' ? item.price.toFixed(1) : item.price} DT
-                          </span>
-                        </div>
-                      </div>
-                      <div className="p-8 text-left">
-                        <h3 className="text-2xl mb-3 font-display text-madelina-navy group-hover:text-madelina-terracotta transition-colors duration-300">
-                          {item.title}
-                        </h3>
-                        <p className="text-madelina-navy/60 leading-relaxed text-sm mb-6 line-clamp-3">{item.description}</p>
-                        <button 
-                          onClick={() => setSelectedItem(item)}
-                          className="text-[10px] font-bold uppercase tracking-[0.2em] text-madelina-terracotta flex items-center gap-2 hover:translate-x-1.5 transition-transform cursor-pointer"
-                        >
-                          Détails <span className="text-lg">→</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+            <div className="min-h-[50vh]">
+              {isCategoryLoading ? (
+                <div className="flex items-center justify-center h-full py-20">
+                  <div className="flex flex-col items-center animate-fadeIn">
+                    <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                  {categories.map(cat => {
+                    const catItems = isPreview ? plats.filter(item => item.category === cat).slice(0, 3) : plats.filter(item => item.category === cat);
+                    return (
+                      <div key={cat} className={activeCategory === cat ? "contents" : "hidden"} style={activeCategory === cat ? { animation: 'fadeIn 0.25s ease-out' } : undefined}>
+                        {catItems.map((item, index) => (
+                          <div
+                            key={item.id}
+                            className="group glass-card rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white border border-madelina-terracotta/5"
+                          >
+                            <div className="relative h-72 overflow-hidden">
+                              <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="eager" fetchPriority="high" decoding="async" />
+                              <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg">
+                                <span className="font-bold text-madelina-terracotta tracking-tight">
+                                  {typeof item.price === 'number' ? item.price.toFixed(1) : item.price} DT
+                                </span>
+                              </div>
+                            </div>
+                            <div className="p-8 text-left">
+                              <h3 className="text-2xl mb-3 font-display text-madelina-navy group-hover:text-madelina-terracotta transition-colors duration-300">
+                                {item.title}
+                              </h3>
+                              <p className="text-madelina-navy/60 leading-relaxed text-sm mb-6 line-clamp-3">{item.description}</p>
+                              <button 
+                                onClick={() => setSelectedItem(item)}
+                                className="text-[10px] font-bold uppercase tracking-[0.2em] text-madelina-terracotta flex items-center gap-2 hover:translate-x-1.5 transition-transform cursor-pointer"
+                              >
+                                Détails <span className="text-lg">→</span>
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
       </div>
 

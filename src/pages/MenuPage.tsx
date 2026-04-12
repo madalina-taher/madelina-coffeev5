@@ -120,22 +120,11 @@ const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
 const MenuPage = () => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showLoader, setShowLoader] = useState(false);
   const [activeCategory, setActiveCategory] = useState("");
   const [activeTab, setActiveTab] = useState("");
+  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isPending, startTransition] = useTransition();
-
-  // 3-second delayed loader
-  useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (loading) {
-      timer = setTimeout(() => setShowLoader(true), 3000);
-    } else {
-      setShowLoader(false);
-    }
-    return () => clearTimeout(timer);
-  }, [loading]);
 
   // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
@@ -207,11 +196,18 @@ const MenuPage = () => {
   const isCategoryDrinkLike = (cat: string) => cat.includes("Boisson") || cat.includes("Viennoiserie");
 
   const handleCategoryChange = useCallback((cat: string) => {
+    if (activeTab === cat) return;
     setActiveTab(cat);
-    startTransition(() => {
-      setActiveCategory(cat);
-    });
-  }, []);
+    setIsCategoryLoading(true);
+    
+    // Give the browser 50ms to paint the loader before freezing the thread with a heavy React render
+    setTimeout(() => {
+      startTransition(() => {
+        setActiveCategory(cat);
+        setIsCategoryLoading(false);
+      });
+    }, 50);
+  }, [activeTab]);
 
   const openModal = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
@@ -222,12 +218,10 @@ const MenuPage = () => {
         <Header />
         <main className="flex-grow pt-28 pb-20 relative overflow-hidden">
           <div className="min-h-[50vh] flex items-center justify-center">
-            {showLoader && (
-              <div className="flex flex-col items-center animate-fadeIn">
-                <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
-                <div className="font-display text-madelina-navy/40">Chargement...</div>
-              </div>
-            )}
+            <div className="flex flex-col items-center animate-fadeIn">
+              <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
+              <div className="font-display text-madelina-navy/40">Chargement...</div>
+            </div>
           </div>
         </main>
         <Footer />
@@ -268,29 +262,39 @@ const MenuPage = () => {
             </div>
           )}
 
-          {/* Items Grid/List — Only render active category to avert major DOM relayouts */}
-          <div className={`transition-opacity duration-200 min-h-[50vh] ${isPending ? 'opacity-50' : 'opacity-100'}`}>
-            {categories.map((cat) => {
-              if (activeCategory !== cat) return null;
-
-              const drinkLike = isCategoryDrinkLike(cat);
-              const itemsInCat = plats.filter(item => item.category === cat);
-              return (
-                <div
-                  key={cat}
-                  style={{ animation: 'fadeIn 0.25s ease-out' }}
-                  className={drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"}
-                >
-                  {itemsInCat.map((item) =>
-                    drinkLike ? (
-                      <DrinkCard key={item.id} item={item} onClick={() => openModal(item)} />
-                    ) : (
-                      <FoodCard key={item.id} item={item} onClick={() => openModal(item)} />
-                    )
-                  )}
+          {/* Items Grid/List — Render loader if switching, else render grid */}
+          <div className="min-h-[50vh]">
+            {isCategoryLoading ? (
+              <div className="flex items-center justify-center h-full pt-20">
+                <div className="flex flex-col items-center animate-fadeIn">
+                  <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
                 </div>
-              );
-            })}
+              </div>
+            ) : (
+              <div className={`transition-opacity duration-200 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
+                {categories.map((cat) => {
+                  if (activeCategory !== cat) return null;
+
+                  const drinkLike = isCategoryDrinkLike(cat);
+                  const itemsInCat = plats.filter(item => item.category === cat);
+                  return (
+                    <div
+                      key={cat}
+                      style={{ animation: 'fadeIn 0.25s ease-out' }}
+                      className={drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"}
+                    >
+                      {itemsInCat.map((item) =>
+                        drinkLike ? (
+                          <DrinkCard key={item.id} item={item} onClick={() => openModal(item)} />
+                        ) : (
+                          <FoodCard key={item.id} item={item} onClick={() => openModal(item)} />
+                        )
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </main>
