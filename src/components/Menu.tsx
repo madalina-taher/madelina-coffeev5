@@ -10,7 +10,7 @@ interface MenuItem {
   description?: string;
 }
 
-// ── Parse menu.html fragment → MenuItem[] ──
+// ── Parse menu-data.html fragment → MenuItem[] ──
 function parseMenuHTML(html: string): MenuItem[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
@@ -31,8 +31,8 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
-// ── GitHub Raw API URL for menu.html ──
-const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu.html';
+// ── GitHub Raw API URL for menu-data.html ──
+const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu-data.html';
 
 export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
@@ -40,7 +40,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const [activeCategory, setActiveCategory] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
 
-  // Fetch menu.html from GitHub Raw API on mount
+  // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
     const fetchMenu = async () => {
       try {

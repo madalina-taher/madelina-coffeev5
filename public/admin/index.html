@@ -876,18 +876,18 @@
     // ══════════════════════════════════════════════════════════════
     // ██  MADELINA ADMIN — LIVE HTML EDITING via GitHub API      ██
     // ══════════════════════════════════════════════════════════════
-    // This dashboard directly edits public/menu.html (a pure HTML
+    // This dashboard directly edits public/menu-data.html (a pure HTML
     // fragment). It fetches the file via GitHub API, parses it with
     // DOMParser, manipulates DOM nodes, then pushes back to GitHub.
     // ══════════════════════════════════════════════════════════════
 
     // ── STATE ──
     let menuItems = [];        // Array of {id, category, title, price, image, description}
-    let menuDoc = null;        // Parsed DOM document of menu.html
+    let menuDoc = null;        // Parsed DOM document of menu-data.html
     let menuContainer = null;  // Reference to #menu-container in parsed DOM
     let activeFilter = 'all';
     let fileSHA = null;
-    const GH_FILE_PATH = 'public/menu.html';
+    const GH_FILE_PATH = 'public/menu-data.html';
 
     // ── GITHUB CONFIG ──
     function getGH() {
@@ -959,7 +959,7 @@
             if (res.status === 401) msg = 'Token invalide ou expiré — régénérez-le sur GitHub';
             else if (res.status === 403 || (errData.message && errData.message.toLowerCase().includes('not accessible')))
               msg = 'Token sans les bonnes permissions! Régénérez le token avec "Contents: Read and write"';
-            else if (res.status === 404) msg = 'Fichier menu.html introuvable — vérifiez le dépôt dans ⚙️';
+            else if (res.status === 404) msg = 'Fichier menu-data.html introuvable — vérifiez le dépôt dans ⚙️';
             else if (errData.message) msg = errData.message;
             throw new Error(msg);
           }
@@ -976,7 +976,7 @@
       // ── LOCAL FALLBACK (for dev only) ──
       if (isLocal) {
         try {
-          const res = await fetch('../menu.html');
+          const res = await fetch('../menu-data.html');
           if (!res.ok) throw new Error('not found');
           const htmlString = await res.text();
           parseMenuHTML(htmlString);
@@ -1004,7 +1004,7 @@
       menuContainer = menuDoc.querySelector('#menu-container');
 
       if (!menuContainer) {
-        console.error('menu.html is missing #menu-container!');
+        console.error('menu-data.html is missing #menu-container!');
         menuItems = [];
         return;
       }
@@ -1030,7 +1030,7 @@
     function serializeMenuHTML() {
       // Rebuild #menu-container from menuItems (the authoritative source)
       // This is safer than modifying the parsed DOM piecemeal
-      const lines = ['<!-- menu.html — Pure content fragment. Dashboard edits this directly. -->', '<div id="menu-container">'];
+      const lines = ['<!-- menu-data.html — Pure content fragment. Dashboard edits this directly. -->', '<div id="menu-container">'];
 
       menuItems.forEach(item => {
         const safeTitle = escapeHTML(item.title);

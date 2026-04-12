@@ -21,7 +21,7 @@ const ORDER = [
   "✨ Autres"
 ];
 
-// ── Parse menu.html fragment → MenuItem[] ──
+// ── Parse menu-data.html fragment → MenuItem[] ──
 function parseMenuHTML(html: string): MenuItem[] {
   const parser = new DOMParser();
   const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
@@ -113,8 +113,8 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
   </div>
 ));
 
-// ── GitHub Raw API URL for menu.html ──
-const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu.html';
+// ── GitHub Raw API URL for menu-data.html ──
+const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu-data.html';
 
 const MenuPage = () => {
   const [plats, setPlats] = useState<MenuItem[]>([]);
@@ -124,7 +124,7 @@ const MenuPage = () => {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Fetch menu.html from GitHub Raw API on mount
+  // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
     const fetchMenu = async () => {
       try {
