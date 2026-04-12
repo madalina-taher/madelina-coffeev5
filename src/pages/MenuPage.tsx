@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback, memo, useTransition } from 'react';
-import menuData from '../data/menu.json';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
 interface MenuItem {
+  id: string;
   category: string;
   title: string;
   price: number;
@@ -20,6 +20,27 @@ const ORDER = [
   "🍽️ Plats",
   "✨ Autres"
 ];
+
+// ── Parse menu.html fragment → MenuItem[] ──
+function parseMenuHTML(html: string): MenuItem[] {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const container = doc.querySelector('#menu-container');
+  if (!container) return [];
+
+  const items: MenuItem[] = [];
+  container.querySelectorAll('.menu-item').forEach(div => {
+    items.push({
+      id: div.id,
+      category: div.getAttribute('data-category') || '',
+      title: div.querySelector('.item-title')?.textContent || '',
+      price: parseFloat(div.querySelector('.item-price')?.textContent || '0') || 0,
+      image: div.querySelector('.item-image')?.getAttribute('src') || '',
+      description: div.querySelector('.item-description')?.textContent || '',
+    });
+  });
+  return items;
+}
 
 // Memoized card components — avoid re-renders when category changes
 const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void }) => (
@@ -92,23 +113,61 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
   </div>
 ));
 
-const plats: MenuItem[] = menuData?.plats || [];
-const categories = Array.from(new Set(plats.map(item => item.category)))
-  .sort((a, b) => {
-    const indexA = ORDER.indexOf(a);
-    const indexB = ORDER.indexOf(b);
-    if (indexA === -1 && indexB === -1) return a.localeCompare(b);
-    if (indexA === -1) return 1;
-    if (indexB === -1) return -1;
-    return indexA - indexB;
-  });
+// ── GitHub Raw API URL for menu.html ──
+const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu.html';
 
 const MenuPage = () => {
-
-  const [activeCategory, setActiveCategory] = useState(categories[0] || "");
-  const [activeTab, setActiveTab] = useState(categories[0] || "");
+  const [plats, setPlats] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("");
+  const [activeTab, setActiveTab] = useState("");
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Fetch menu.html from GitHub Raw API on mount
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        // Cache-busting: append timestamp to bypass CDN/browser cache
+        const res = await fetch(`${MENU_RAW_URL}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const html = await res.text();
+        const items = parseMenuHTML(html);
+        setPlats(items);
+
+        // Set initial category
+        const cats = Array.from(new Set(items.map(i => i.category)))
+          .sort((a, b) => {
+            const iA = ORDER.indexOf(a);
+            const iB = ORDER.indexOf(b);
+            if (iA === -1 && iB === -1) return a.localeCompare(b);
+            if (iA === -1) return 1;
+            if (iB === -1) return -1;
+            return iA - iB;
+          });
+        if (cats.length > 0) {
+          setActiveCategory(cats[0]);
+          setActiveTab(cats[0]);
+        }
+      } catch (e) {
+        console.error('Failed to load menu:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenu();
+  }, []);
+
+  // Compute categories from loaded items
+  const categories = Array.from(new Set(plats.map(item => item.category)))
+    .sort((a, b) => {
+      const indexA = ORDER.indexOf(a);
+      const indexB = ORDER.indexOf(b);
+      if (indexA === -1 && indexB === -1) return a.localeCompare(b);
+      if (indexA === -1) return 1;
+      if (indexB === -1) return -1;
+      return indexA - indexB;
+    });
 
   // Force hardcore prefetch of ALL images natively into browser RAM cache in background
   // Defer it to not block the main thread and avoid FPS drops
@@ -129,7 +188,7 @@ const MenuPage = () => {
     } else {
       setTimeout(prefetchImages, 500);
     }
-  }, []);
+  }, [plats]);
 
   // We compute whether a category is drink-like to apply the correct grid structure per category.
   const isCategoryDrinkLike = (cat: string) => cat.includes("Boisson") || cat.includes("Viennoiserie");
@@ -143,6 +202,20 @@ const MenuPage = () => {
 
   const openModal = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col bg-white">
+        <Header />
+        <main className="flex-grow pt-28 pb-20 relative overflow-hidden">
+          <div className="text-center py-20 font-display text-madelina-navy/30">
+            Chargement de la carte madelina...
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -196,9 +269,9 @@ const MenuPage = () => {
                 >
                   {itemsInCat.map((item) =>
                     drinkLike ? (
-                      <DrinkCard key={item.title} item={item} onClick={() => openModal(item)} />
+                      <DrinkCard key={item.id} item={item} onClick={() => openModal(item)} />
                     ) : (
-                      <FoodCard key={item.title} item={item} onClick={() => openModal(item)} />
+                      <FoodCard key={item.id} item={item} onClick={() => openModal(item)} />
                     )
                   )}
                 </div>

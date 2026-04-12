@@ -1,12 +1,64 @@
 import { useState, useEffect } from 'react';
-import menuData from '../data/menu.json';
 import { motion, AnimatePresence } from 'framer-motion';
 
+interface MenuItem {
+  id: string;
+  category: string;
+  title: string;
+  price: number;
+  image?: string;
+  description?: string;
+}
+
+// ── Parse menu.html fragment → MenuItem[] ──
+function parseMenuHTML(html: string): MenuItem[] {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+  const container = doc.querySelector('#menu-container');
+  if (!container) return [];
+
+  const items: MenuItem[] = [];
+  container.querySelectorAll('.menu-item').forEach(div => {
+    items.push({
+      id: div.id,
+      category: div.getAttribute('data-category') || '',
+      title: div.querySelector('.item-title')?.textContent || '',
+      price: parseFloat(div.querySelector('.item-price')?.textContent || '0') || 0,
+      image: div.querySelector('.item-image')?.getAttribute('src') || '',
+      description: div.querySelector('.item-description')?.textContent || '',
+    });
+  });
+  return items;
+}
+
+// ── GitHub Raw API URL for menu.html ──
+const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu.html';
+
 export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
-  const plats = menuData?.plats || [];
-  const categories = Array.from(new Set(plats.map(item => item.category)));
+  const [plats, setPlats] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("");
-  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+
+  // Fetch menu.html from GitHub Raw API on mount
+  useEffect(() => {
+    const fetchMenu = async () => {
+      try {
+        const res = await fetch(`${MENU_RAW_URL}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const html = await res.text();
+        const items = parseMenuHTML(html);
+        setPlats(items);
+      } catch (e) {
+        console.error('Failed to load menu:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchMenu();
+  }, []);
+
+  const categories = Array.from(new Set(plats.map(item => item.category)));
 
   useEffect(() => {
     if (categories.length > 0 && !activeCategory) {
@@ -18,7 +70,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   useEffect(() => {
     if (!plats || plats.length === 0) return;
     const timer = setTimeout(() => {
-      plats.forEach((item: any) => {
+      plats.forEach((item: MenuItem) => {
         if (item.image) {
           const img = new Image();
           img.src = item.image;
@@ -32,7 +84,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
     ? plats.slice(0, 3) 
     : plats.filter(item => item.category === activeCategory);
 
-  if (plats.length === 0) {
+  if (loading || plats.length === 0) {
     return (
       <div className="text-center py-20 font-display text-madelina-navy/30">
         Chargement de la carte madelina...
@@ -99,7 +151,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
                 <div key={cat} className={activeCategory === cat ? "contents" : "hidden"} style={activeCategory === cat ? { animation: 'fadeIn 0.25s ease-out' } : undefined}>
                   {catItems.map((item, index) => (
                     <div
-                      key={`${item.title}-${index}`}
+                      key={item.id}
                       className="group glass-card rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white border border-madelina-terracotta/5"
                     >
                       <div className="relative h-72 overflow-hidden">

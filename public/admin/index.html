@@ -873,15 +873,25 @@
   <div id="toast"></div>
 
   <script>
+    // ══════════════════════════════════════════════════════════════
+    // ██  MADELINA ADMIN — LIVE HTML EDITING via GitHub API      ██
+    // ══════════════════════════════════════════════════════════════
+    // This dashboard directly edits public/menu.html (a pure HTML
+    // fragment). It fetches the file via GitHub API, parses it with
+    // DOMParser, manipulates DOM nodes, then pushes back to GitHub.
+    // ══════════════════════════════════════════════════════════════
+
     // ── STATE ──
-    let menuData = { plats: [] };
+    let menuItems = [];        // Array of {id, category, title, price, image, description}
+    let menuDoc = null;        // Parsed DOM document of menu.html
+    let menuContainer = null;  // Reference to #menu-container in parsed DOM
     let activeFilter = 'all';
     let fileSHA = null;
-    const GH_FILE_PATH = 'src/data/menu.json';
+    const GH_FILE_PATH = 'public/menu.html';
 
+    // ── GITHUB CONFIG ──
     function getGH() {
       let savedRepo = localStorage.getItem('gh_repo');
-      // Override old cached repo automatically
       if (savedRepo === 'madelina-coffee' || savedRepo === 'madelina-coffeev3') {
         savedRepo = 'madelina-coffeev5';
         localStorage.setItem('gh_repo', savedRepo);
@@ -913,21 +923,20 @@
       localStorage.setItem('gh_token', document.getElementById('gh-token').value.trim());
       closeSettings();
       toast('✅ Paramètres enregistrés ! Actualisation...', 'success');
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
+      setTimeout(() => window.location.reload(), 1000);
     }
 
-    // Auto-load menu on startup
+    // ── STARTUP ──
     window.addEventListener('DOMContentLoaded', loadMenu);
 
-    // ── LOAD MENU (GitHub API first, then fallback) ──
+    // ══════════════════════════════════════════
+    // ██  LOAD: Fetch menu.html from GitHub   ██
+    // ══════════════════════════════════════════
     async function loadMenu() {
       const gh = getGH();
       const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-      let ghError = null;
 
-      // Try GitHub API first (to get SHA for updates)
+      // ── GITHUB API LOAD (primary — gets SHA for updates) ──
       if (gh.token) {
         try {
           const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
@@ -938,8 +947,8 @@
             const data = await res.json();
             fileSHA = data.sha;
             const bytes = Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0));
-            const content = new TextDecoder('utf-8').decode(bytes);
-            menuData = JSON.parse(content);
+            const htmlString = new TextDecoder('utf-8').decode(bytes);
+            parseMenuHTML(htmlString);
             hideErrorState();
             render();
             toast('📡 Menu chargé depuis le serveur', 'success');
@@ -950,52 +959,112 @@
             if (res.status === 401) msg = 'Token invalide ou expiré — régénérez-le sur GitHub';
             else if (res.status === 403 || (errData.message && errData.message.toLowerCase().includes('not accessible')))
               msg = 'Token sans les bonnes permissions! Régénérez le token avec "Contents: Read and write"';
-            else if (res.status === 404) msg = 'Dépôt introuvable — vérifiez owner/repo dans ⚙️';
+            else if (res.status === 404) msg = 'Fichier menu.html introuvable — vérifiez le dépôt dans ⚙️';
             else if (errData.message) msg = errData.message;
             throw new Error(msg);
           }
         } catch (e) {
           console.warn('GitHub API load failed:', e);
-          ghError = e.message;
-        }
-      }
-
-      // If online and we have an error or no token, block access.
-      if (!isLocal && (ghError || !gh.token)) {
-        renderErrorState(ghError ? `Erreur: ${ghError}` : 'Veuillez configurer l\'accès pour accéder au panneau d\'administration.');
-        if (ghError) toast('⚠️ Erreur: ' + ghError, 'error');
-        else toast('⚠️ Configurez l\'accès (⚙️)', 'error');
-        return;
-      }
-
-      // Fallback: fetch from site (for local dev)
-      try {
-        const res = await fetch('../src/data/menu.json');
-        if (!res.ok) throw new Error('not found');
-        menuData = await res.json();
-      } catch (e) {
-        try {
-          const res2 = await fetch(`https://raw.githubusercontent.com/${gh.owner}/${gh.repo}/main/src/data/menu.json`);
-          if (!res2.ok) throw new Error('not found');
-          menuData = await res2.json();
-        } catch (e2) {
-          menuData = { plats: [] };
-          if (ghError) {
-            renderErrorState(`Erreur: ${ghError}`);
-            toast('⚠️ Erreur: ' + ghError, 'error');
+          if (!isLocal) {
+            renderErrorState(`Erreur: ${e.message}`);
+            toast('⚠️ Erreur: ' + e.message, 'error');
             return;
           }
         }
       }
-      hideErrorState();
-      render();
+
+      // ── LOCAL FALLBACK (for dev only) ──
+      if (isLocal) {
+        try {
+          const res = await fetch('../menu.html');
+          if (!res.ok) throw new Error('not found');
+          const htmlString = await res.text();
+          parseMenuHTML(htmlString);
+          hideErrorState();
+          render();
+          toast('📂 Menu chargé depuis le fichier local', 'success');
+          return;
+        } catch (e) {
+          console.warn('Local load failed:', e);
+        }
+      }
+
+      // ── NO TOKEN ──
+      renderErrorState('Veuillez configurer l\'accès pour accéder au panneau d\'administration.');
+      toast('⚠️ Configurez l\'accès (⚙️)', 'error');
     }
 
+    // ══════════════════════════════════════════════════
+    // ██  PARSE: HTML fragment → menuItems array      ██
+    // ══════════════════════════════════════════════════
+    function parseMenuHTML(htmlString) {
+      // Wrap in a root element for DOMParser
+      const parser = new DOMParser();
+      menuDoc = parser.parseFromString(`<div id="__root">${htmlString}</div>`, 'text/html');
+      menuContainer = menuDoc.querySelector('#menu-container');
+
+      if (!menuContainer) {
+        console.error('menu.html is missing #menu-container!');
+        menuItems = [];
+        return;
+      }
+
+      // Extract items from DOM children
+      menuItems = [];
+      const divs = menuContainer.querySelectorAll('.menu-item');
+      divs.forEach(div => {
+        menuItems.push({
+          id: div.id,
+          category: div.getAttribute('data-category') || '',
+          title: div.querySelector('.item-title')?.textContent || '',
+          price: parseFloat(div.querySelector('.item-price')?.textContent) || 0,
+          image: div.querySelector('.item-image')?.getAttribute('src') || '',
+          description: div.querySelector('.item-description')?.textContent || '',
+        });
+      });
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // ██  SERIALIZE: menuItems array → HTML fragment string   ██
+    // ══════════════════════════════════════════════════════════
+    function serializeMenuHTML() {
+      // Rebuild #menu-container from menuItems (the authoritative source)
+      // This is safer than modifying the parsed DOM piecemeal
+      const lines = ['<!-- menu.html — Pure content fragment. Dashboard edits this directly. -->', '<div id="menu-container">'];
+
+      menuItems.forEach(item => {
+        const safeTitle = escapeHTML(item.title);
+        const safeDesc = escapeHTML(item.description || '');
+        const safeImage = escapeHTML(item.image || '');
+        const safeCategory = escapeHTML(item.category || '');
+        const price = typeof item.price === 'number' ? item.price : parseFloat(item.price) || 0;
+
+        lines.push(`  <div id="${item.id}" class="menu-item" data-category="${safeCategory}">`);
+        lines.push(`    <img src="${safeImage}" alt="${safeTitle}" class="item-image" />`);
+        lines.push(`    <h3 class="item-title">${safeTitle}</h3>`);
+        lines.push(`    <span class="item-price">${price}</span>`);
+        lines.push(`    <p class="item-description">${safeDesc}</p>`);
+        lines.push(`  </div>`);
+      });
+
+      lines.push('</div>', '');
+      return lines.join('\n');
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ══════════════════════════════════════════
+    // ██  ERROR STATE                         ██
+    // ══════════════════════════════════════════
     function renderErrorState(msg) {
       document.getElementById('stats-bar').style.display = 'none';
       document.querySelector('.toolbar').style.display = 'none';
       document.querySelector('.table-wrap').style.display = 'none';
-      
+
       let errDiv = document.getElementById('admin-error-state');
       if (!errDiv) {
         errDiv = document.createElement('div');
@@ -1019,23 +1088,23 @@
       document.querySelector('.table-wrap').style.display = 'block';
     }
 
-    // ── RENDER ──
-    // Master render: builds everything from scratch (called after data load, add, edit, delete)
+    // ══════════════════════════════════════════
+    // ██  RENDER                               ██
+    // ══════════════════════════════════════════
     function render() {
       renderStats();
       renderFilters();
-      buildTable();     // Build ALL rows once
-      applyFilter();    // Show/hide rows based on activeFilter
+      buildTable();
+      applyFilter();
     }
 
     function renderStats() {
-      const plats = menuData.plats || [];
-      const cats = [...new Set(plats.map(p => p.category))];
-      const prices = plats.map(p => parseFloat(p.price) || 0);
+      const cats = [...new Set(menuItems.map(p => p.category))];
+      const prices = menuItems.map(p => parseFloat(p.price) || 0);
       const max = prices.length ? Math.max(...prices).toFixed(1) : 0;
 
       document.getElementById('stats-bar').innerHTML = `
-      <div class="stat-card"><div class="label">Total plats</div><div class="value">${plats.length}</div></div>
+      <div class="stat-card"><div class="label">Total plats</div><div class="value">${menuItems.length}</div></div>
       <div class="stat-card"><div class="label">Catégories</div><div class="value">${cats.length}</div></div>
       <div class="stat-card"><div class="label">Prix max</div><div class="value">${max}<span>DT</span></div></div>
     `;
@@ -1051,8 +1120,7 @@
     ];
 
     function renderFilters() {
-      const plats = menuData.plats || [];
-      const catsSet = Array.from(new Set(plats.map(p => p.category)));
+      const catsSet = Array.from(new Set(menuItems.map(p => p.category)));
       const sortedCats = catsSet.sort((a, b) => {
         const indexA = CATEGORY_ORDER.indexOf(a);
         const indexB = CATEGORY_ORDER.indexOf(b);
@@ -1071,25 +1139,15 @@
     `).join('');
     }
 
-    // ── INSTANT FILTER (no DOM rebuild!) ──
+    // ── INSTANT FILTER ──
     function setFilter(cat) {
       activeFilter = cat;
-
-      // 1) Update filter tab active state (CSS only — no innerHTML rebuild)
       document.querySelectorAll('.filter-tab').forEach(btn => {
-        const btnCat = btn.getAttribute('data-filter-cat');
-        if (btnCat === cat) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+        btn.classList.toggle('active', btn.getAttribute('data-filter-cat') === cat);
       });
-
-      // 2) Show/hide rows instantly (CSS display toggle — zero DOM destruction)
       applyFilter();
     }
 
-    // Toggle row visibility based on activeFilter — INSTANT, no rebuilding
     function applyFilter() {
       const tbody = document.getElementById('menu-tbody');
       const rows = tbody.querySelectorAll('tr[data-cat]');
@@ -1098,41 +1156,31 @@
 
       rows.forEach(row => {
         const rowCat = row.getAttribute('data-cat');
-        if (activeFilter === 'all' || rowCat === activeFilter) {
-          row.style.display = '';
-          visibleCount++;
-        } else {
-          row.style.display = 'none';
-        }
+        const show = activeFilter === 'all' || rowCat === activeFilter;
+        row.style.display = show ? '' : 'none';
+        if (show) visibleCount++;
       });
 
-      // Show/hide empty state
-      if (emptyRow) {
-        emptyRow.style.display = visibleCount === 0 ? '' : 'none';
-      }
+      if (emptyRow) emptyRow.style.display = visibleCount === 0 ? '' : 'none';
     }
 
-    // ── BUILD TABLE ONCE ──
-    // Creates all rows in the original menu.json order (insertion order).
-    // Each row gets hidden data attributes: data-id, data-cat, data-real-idx.
+    // ── BUILD TABLE ──
     function buildTable() {
-      const plats = menuData.plats || [];
       const tbody = document.getElementById('menu-tbody');
 
-      if (!plats.length) {
-        tbody.innerHTML = `<tr id="empty-row"><td colspan="5"><div class="empty-state">Aucun plat dans cette catégorie.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td></tr>`;
+      if (!menuItems.length) {
+        tbody.innerHTML = `<tr id="empty-row"><td colspan="5"><div class="empty-state">Aucun plat.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td></tr>`;
         return;
       }
 
-      // Build all rows in their ORIGINAL order (no sorting — preserves insertion order)
       const fragment = document.createDocumentFragment();
 
-      plats.forEach((item, idx) => {
+      menuItems.forEach((item, idx) => {
         const price = typeof item.price === 'number' ? item.price.toFixed(1) : item.price;
         const tr = document.createElement('tr');
-        tr.setAttribute('data-id', idx);          // Hidden unique ID
-        tr.setAttribute('data-cat', item.category); // For instant filtering
-        tr.setAttribute('data-real-idx', idx);     // Real index in menuData.plats
+        tr.setAttribute('data-id', item.id);
+        tr.setAttribute('data-cat', item.category);
+        tr.setAttribute('data-real-idx', idx);
         tr.innerHTML = `
           <td class="td-img">
             <img src="${item.image || 'https://via.placeholder.com/52'}" alt="${item.title}"
@@ -1154,25 +1202,25 @@
         fragment.appendChild(tr);
       });
 
-      // Add empty state row (hidden by default, shown when filter yields 0)
       const emptyTr = document.createElement('tr');
       emptyTr.id = 'empty-row';
       emptyTr.style.display = 'none';
       emptyTr.innerHTML = `<td colspan="5"><div class="empty-state">Aucun plat dans cette catégorie.<br><button class="btn btn-primary" style="margin-top:12px" onclick="openModal(null)">+ Ajouter un plat</button></div></td>`;
       fragment.appendChild(emptyTr);
 
-      // Single DOM write — replaces everything at once
       tbody.innerHTML = '';
       tbody.appendChild(fragment);
     }
 
-    // ── MODAL ──
+    // ══════════════════════════════════════════
+    // ██  MODAL (Add / Edit)                  ██
+    // ══════════════════════════════════════════
     function openModal(idx) {
       document.getElementById('modal-title').textContent = idx === null ? 'Nouveau plat' : 'Modifier le plat';
       document.getElementById('item-index').value = idx === null ? '' : idx;
 
       if (idx !== null) {
-        const item = menuData.plats[idx];
+        const item = menuItems[idx];
         document.getElementById('f-title').value = item.title || '';
         document.getElementById('f-price').value = item.price || '';
         document.getElementById('f-category').value = item.category || '';
@@ -1239,47 +1287,53 @@
         console.error(err);
       }
 
-      setTimeout(() => {
-        statusEl.style.display = 'none';
-      }, 3000);
-
+      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
       event.target.value = '';
     }
 
-    // ── SAVE / DELETE ──
+    // ══════════════════════════════════════════════════
+    // ██  ADD / EDIT / DELETE  (Live DOM editing)      ██
+    // ══════════════════════════════════════════════════
+
     function saveItem(e) {
       e.preventDefault();
-      const idx = document.getElementById('item-index').value;
-      const item = {
+      const idxStr = document.getElementById('item-index').value;
+      const newData = {
         category: document.getElementById('f-category').value,
         title: document.getElementById('f-title').value.trim(),
         price: parseFloat(document.getElementById('f-price').value),
         image: document.getElementById('f-image').value.trim(),
         description: document.getElementById('f-description').value.trim(),
       };
-      if (!item.description) delete item.description;
 
-      if (idx === '') {
-        menuData.plats.unshift(item);
-        toast('✅ Plat ajouté !', 'success');
+      if (idxStr === '') {
+        // ── ADD NEW ITEM ──
+        const uniqueId = 'plat-' + Date.now();
+        newData.id = uniqueId;
+        menuItems.unshift(newData);
+        toast('✅ Plat ajouté — pensez à sauvegarder !', 'success');
       } else {
-        menuData.plats[parseInt(idx)] = item;
-        toast('✅ Modifications enregistrées !', 'success');
+        // ── EDIT EXISTING ──
+        const idx = parseInt(idxStr);
+        const existing = menuItems[idx];
+        menuItems[idx] = { ...existing, ...newData, id: existing.id };
+        toast('✅ Modifications enregistrées — pensez à sauvegarder !', 'success');
       }
       closeModal();
       render();
     }
 
     function deleteItem(idx) {
-      const name = menuData.plats[idx]?.title || 'ce plat';
+      const name = menuItems[idx]?.title || 'ce plat';
       if (!confirm(`Supprimer "${name}" ?`)) return;
-      menuData.plats.splice(idx, 1);
+      menuItems.splice(idx, 1);
       render();
       toast('🗑️ Plat supprimé — pensez à sauvegarder !', 'success');
     }
 
-
-    // ── SAVE: GitHub API (remote) or Vite API (local) ──
+    // ══════════════════════════════════════════════════════════════
+    // ██  SAVE: Serialize HTML + Push to GitHub via Contents API  ██
+    // ══════════════════════════════════════════════════════════════
     async function saveToFile() {
       const btn = document.getElementById('save-btn');
       const orig = btn.textContent;
@@ -1287,112 +1341,103 @@
       btn.disabled = true;
 
       const gh = getGH();
-      const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
       try {
-        if (gh.token && !isLocal) {
-          // ── GITHUB API SAVE ──
-          const jsonStr = JSON.stringify(menuData, null, 2);
-          const bytes = new TextEncoder().encode(jsonStr);
-          // Handle large files safely — btoa can fail on large payloads
-          let content;
-          try {
-            content = btoa(String.fromCharCode(...bytes));
-          } catch (e) {
-            // Fallback for large files: chunk the conversion
-            let binary = '';
-            for (let i = 0; i < bytes.length; i++) {
-              binary += String.fromCharCode(bytes[i]);
-            }
-            content = btoa(binary);
+        if (!gh.token) throw new Error('Token manquant — configurez l\'accès dans ⚙️');
+
+        // 1) Serialize menuItems → HTML fragment string
+        const htmlString = serializeMenuHTML();
+
+        // Safety check: validate the serialized HTML
+        const testParser = new DOMParser();
+        const testDoc = testParser.parseFromString(`<div>${htmlString}</div>`, 'text/html');
+        const testContainer = testDoc.querySelector('#menu-container');
+        if (!testContainer) {
+          throw new Error('Erreur critique: la structure HTML est corrompue. Sauvegarde annulée.');
+        }
+        const testItems = testContainer.querySelectorAll('.menu-item');
+        if (testItems.length !== menuItems.length) {
+          throw new Error(`Erreur: ${testItems.length} plats dans le HTML mais ${menuItems.length} attendus. Sauvegarde annulée.`);
+        }
+
+        // 2) Base64 encode
+        const bytes = new TextEncoder().encode(htmlString);
+        let content;
+        try {
+          content = btoa(String.fromCharCode(...bytes));
+        } catch (e) {
+          let binary = '';
+          for (let i = 0; i < bytes.length; i++) {
+            binary += String.fromCharCode(bytes[i]);
           }
+          content = btoa(binary);
+        }
 
-          // Always fetch the latest SHA before saving to avoid 409 conflicts
-          try {
-            const shaRes = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
-              headers: { 'Authorization': `Bearer ${gh.token}`, 'Accept': 'application/vnd.github.v3+json' },
-              cache: 'no-store'
-            });
-            if (shaRes.ok) {
-              const shaData = await shaRes.json();
-              fileSHA = shaData.sha;
-            } else if (shaRes.status === 404) {
-              // File doesn't exist yet — fileSHA stays null (will create new file)
-              fileSHA = null;
-            } else {
-              const errData = await shaRes.json().catch(() => ({}));
-              const errMsg = errData.message || `HTTP ${shaRes.status}`;
-              // Check for token permission issues on read
-              if (shaRes.status === 403 || errMsg.toLowerCase().includes('not accessible')) {
-                throw new Error(
-                  'Token non autorisé! Allez sur GitHub → Settings → Developer settings → ' +
-                  'Personal access tokens → Régénérez le token avec la permission "Contents: Read and write"'
-                );
-              }
-              throw new Error(`Erreur SHA: ${errMsg}`);
-            }
-          } catch (shaErr) {
-            if (shaErr.message.includes('Token non autorisé')) throw shaErr;
-            console.warn('SHA fetch failed:', shaErr);
-            // Continue with existing SHA if we have one
-            if (!fileSHA) throw new Error('Impossible de récupérer le SHA du fichier: ' + shaErr.message);
-          }
-
-          const putBody = {
-            message: `🍽️ Menu mis à jour (${menuData.plats.length} plats)`,
-            content: content,
-          };
-          // Only include SHA if file already exists (omit for new file creation)
-          if (fileSHA) putBody.sha = fileSHA;
-
-          const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
-            method: 'PUT',
-            headers: {
-              'Authorization': `Bearer ${gh.token}`,
-              'Accept': 'application/vnd.github.v3+json',
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(putBody),
+        // 3) Fetch latest SHA to avoid 409 conflicts
+        try {
+          const shaRes = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
+            headers: { 'Authorization': `Bearer ${gh.token}`, 'Accept': 'application/vnd.github.v3+json' },
+            cache: 'no-store'
           });
-
-          if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            const errMsg = errData.message || `GitHub API error ${res.status}`;
-
-            // ── SPECIFIC ERROR HANDLING ──
-            if (res.status === 403 || errMsg.toLowerCase().includes('not accessible') || errMsg.toLowerCase().includes('resource not accessible')) {
+          if (shaRes.ok) {
+            const shaData = await shaRes.json();
+            fileSHA = shaData.sha;
+          } else if (shaRes.status === 404) {
+            fileSHA = null;
+          } else {
+            const errData = await shaRes.json().catch(() => ({}));
+            const errMsg = errData.message || `HTTP ${shaRes.status}`;
+            if (shaRes.status === 403 || errMsg.toLowerCase().includes('not accessible')) {
               throw new Error(
-                'Token sans permission d\'écriture! Créez un nouveau token sur GitHub → Settings → ' +
-                'Developer settings → Fine-grained tokens → Permission "Contents: Read and write" → ' +
-                'puis mettez-le à jour dans ⚙️ Paramètres'
+                'Token non autorisé! Allez sur GitHub → Settings → Developer settings → ' +
+                'Personal access tokens → Régénérez le token avec la permission "Contents: Read and write"'
               );
             }
-            if (res.status === 409) {
-              // SHA conflict — someone else pushed in the meantime
-              throw new Error('Conflit de version! Rechargez la page et réessayez.');
-            }
-            if (res.status === 422) {
-              throw new Error('Erreur de validation: ' + errMsg + ' — Essayez de recharger la page.');
-            }
-            throw new Error(errMsg);
+            throw new Error(`Erreur SHA: ${errMsg}`);
           }
-
-          const result = await res.json();
-          fileSHA = result.content.sha;
-          btn.textContent = '✅ Publié !';
-          toast(`✅ Menu publié en ligne — ${menuData.plats.length} plats. Le site se met à jour dans ~1min.`, 'success');
-        } else {
-          // ── LOCAL VITE API SAVE ──
-          const res = await fetch('/api/save-menu', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(menuData),
-          });
-          const data = await res.json();
-          if (!data.ok) throw new Error(data.error || 'Erreur inconnue');
-          btn.textContent = '✅ Sauvegardé !';
-          toast(`✅ Menu sauvegardé — ${data.items} plats enregistrés`, 'success');
+        } catch (shaErr) {
+          if (shaErr.message.includes('Token non autorisé')) throw shaErr;
+          console.warn('SHA fetch failed:', shaErr);
+          if (!fileSHA) throw new Error('Impossible de récupérer le SHA du fichier: ' + shaErr.message);
         }
+
+        // 4) PUT to GitHub
+        const putBody = {
+          message: `🍽️ Menu mis à jour (${menuItems.length} plats)`,
+          content: content,
+        };
+        if (fileSHA) putBody.sha = fileSHA;
+
+        const res = await fetch(`https://api.github.com/repos/${gh.owner}/${gh.repo}/contents/${GH_FILE_PATH}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${gh.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(putBody),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const errMsg = errData.message || `GitHub API error ${res.status}`;
+
+          if (res.status === 403 || errMsg.toLowerCase().includes('not accessible') || errMsg.toLowerCase().includes('resource not accessible')) {
+            throw new Error(
+              'Token sans permission d\'écriture! Créez un nouveau token sur GitHub → Settings → ' +
+              'Developer settings → Fine-grained tokens → Permission "Contents: Read and write" → ' +
+              'puis mettez-le à jour dans ⚙️ Paramètres'
+            );
+          }
+          if (res.status === 409) throw new Error('Conflit de version! Rechargez la page et réessayez.');
+          if (res.status === 422) throw new Error('Erreur de validation: ' + errMsg + ' — Essayez de recharger la page.');
+          throw new Error(errMsg);
+        }
+
+        const result = await res.json();
+        fileSHA = result.content.sha;
+        btn.textContent = '✅ Publié !';
+        toast(`✅ Menu publié en ligne — ${menuItems.length} plats. Changements visibles immédiatement !`, 'success');
         setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
       } catch (err) {
         btn.textContent = '❌ Erreur';
