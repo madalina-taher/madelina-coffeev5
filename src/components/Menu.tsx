@@ -31,8 +31,9 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
-// ── GitHub Raw API URL for menu-data.html ──
-const MENU_RAW_URL = 'https://raw.githubusercontent.com/madalina-taher/madelina-coffeev5/main/public/menu-data.html';
+// ── Local / GitHub Pages URL ──
+// We use the deployed file on GitHub Pages to avoid the 5-minute cache of raw.githubusercontent.com
+const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
 
 export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
   const [plats, setPlats] = useState<MenuItem[]>([]);

@@ -1437,7 +1437,7 @@
         const result = await res.json();
         fileSHA = result.content.sha;
         btn.textContent = '✅ Publié !';
-        toast(`✅ Menu publié en ligne — ${menuItems.length} plats. Changements visibles immédiatement !`, 'success');
+        toast(`✅ Menu publié sur GitHub — le site se met à jour dans ~1 minute.`, 'success');
         setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 2500);
       } catch (err) {
         btn.textContent = '❌ Erreur';
