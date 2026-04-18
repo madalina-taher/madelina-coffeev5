@@ -58,14 +58,18 @@ const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void
   >
     <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 mr-4">
       {item.image ? (
-        <img
-          src={optimizeImage(item.image, 400)}
-          alt={item.title}
-          className="w-full h-full object-cover rounded-xl"
-          loading="eager"
-          fetchPriority="high"
-          decoding="async"
-        />
+        <div className="w-full h-full bg-madelina-cream rounded-xl overflow-hidden">
+          <img
+            src={optimizeImage(item.image, 400)}
+            alt={item.title}
+            className="w-full h-full object-cover rounded-xl"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
+            onLoad={e => (e.currentTarget.style.opacity = '1')}
+            style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
+          />
+        </div>
       ) : (
         <div className="w-full h-full bg-madelina-navy/5 rounded-xl flex items-center justify-center">
           <span className="text-xl">🍹</span>
@@ -100,6 +104,8 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
           loading="eager"
           fetchPriority="high"
           decoding="async"
+          onLoad={e => (e.currentTarget.style.opacity = '1')}
+          style={{ opacity: 0, transition: 'opacity 0.3s ease' }}
         />
       )}
       <div className="absolute top-3 right-3 sm:top-6 sm:right-6 bg-white/90 backdrop-blur-md px-3 sm:px-4 py-1 sm:py-1.5 rounded-full shadow-lg">
@@ -130,9 +136,8 @@ const MenuPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("");
   const [activeTab, setActiveTab] = useState("");
-  const [isCategoryLoading, setIsCategoryLoading] = useState(false);
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   // Fetch menu-data.html from GitHub Raw API on mount
   useEffect(() => {
@@ -179,12 +184,11 @@ const MenuPage = () => {
       return indexA - indexB;
     });
 
-  // Force hardcore prefetch of ALL images natively into browser RAM cache in background
-  // Defer it to not block the main thread and avoid FPS drops
+  // Prefetch first category eagerly, rest lazily during idle time
   useEffect(() => {
     if (!plats || plats.length === 0) return;
-
-    const prefetchImages = () => {
+    // Prefetch ALL images in background (no blocking) so subsequent visits are instant
+    const prefetch = () => {
       plats.forEach(item => {
         if (item.image) {
           const img = new Image();
@@ -192,51 +196,24 @@ const MenuPage = () => {
         }
       });
     };
-
     if ('requestIdleCallback' in window) {
-      window.requestIdleCallback(prefetchImages);
+      (window as Window & typeof globalThis & { requestIdleCallback: (cb: () => void) => void }).requestIdleCallback(prefetch);
     } else {
-      setTimeout(prefetchImages, 500);
+      setTimeout(prefetch, 1000);
     }
   }, [plats]);
 
   // We compute whether a category is drink-like to apply the correct grid structure per category.
   const isCategoryDrinkLike = (cat: string) => cat.includes("Boisson") || cat.includes("Viennoiserie");
 
+  // Instant switch — no blocking, images appear as they load
   const handleCategoryChange = useCallback((cat: string) => {
     if (activeTab === cat) return;
-    setActiveTab(cat);
-    setIsCategoryLoading(true);
-    
-    // Find images for this category
-    const itemsInCat = plats.filter(item => item.category === cat);
-    const imagesToLoad = itemsInCat.map(item => optimizeImage(item.image)).filter(Boolean);
-
-    if (imagesToLoad.length === 0) {
-      setTimeout(() => {
-        startTransition(() => {
-          setActiveCategory(cat);
-          setIsCategoryLoading(false);
-        });
-      }, 50);
-      return;
-    }
-
-    // Preload images and wait for them to finish before removing loader
-    Promise.all(imagesToLoad.map(url => {
-      return new Promise(resolve => {
-        const img = new window.Image();
-        img.src = url;
-        img.onload = resolve;
-        img.onerror = resolve; // Continue even if an image fails to load
-      });
-    })).then(() => {
-      startTransition(() => {
-        setActiveCategory(cat);
-        setIsCategoryLoading(false);
-      });
+    startTransition(() => {
+      setActiveTab(cat);
+      setActiveCategory(cat);
     });
-  }, [activeTab, plats]);
+  }, [activeTab]);
 
   const openModal = useCallback((item: MenuItem) => setSelectedItem(item), []);
   const closeModal = useCallback(() => setSelectedItem(null), []);
@@ -291,39 +268,30 @@ const MenuPage = () => {
             </div>
           )}
 
-          {/* Items Grid/List — Render loader if switching, else render grid */}
+          {/* Items Grid/List — instant render, images appear as they load */}
           <div className="min-h-[50vh]">
-            {isCategoryLoading ? (
-              <div className="flex items-center justify-center h-full pt-20">
-                <div className="flex flex-col items-center animate-fadeIn">
-                  <div className="w-8 h-8 border-4 border-madelina-terracotta/20 border-t-madelina-terracotta rounded-full animate-spin mb-4"></div>
-                </div>
-              </div>
-            ) : (
-              <div className={`transition-opacity duration-200 ${isPending ? 'opacity-50' : 'opacity-100'}`}>
-                {categories.map((cat) => {
-                  if (activeCategory !== cat) return null;
-
-                  const drinkLike = isCategoryDrinkLike(cat);
-                  const itemsInCat = plats.filter(item => item.category === cat);
-                  return (
-                    <div
-                      key={cat}
-                      style={{ animation: 'fadeIn 0.25s ease-out' }}
-                      className={drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"}
-                    >
-                      {itemsInCat.map((item) =>
-                        drinkLike ? (
-                          <DrinkCard key={item.id} item={item} onClick={() => openModal(item)} />
-                        ) : (
-                          <FoodCard key={item.id} item={item} onClick={() => openModal(item)} />
-                        )
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            <div style={{ animation: 'fadeIn 0.2s ease-out' }}>
+              {categories.map((cat) => {
+                if (activeCategory !== cat) return null;
+                const drinkLike = isCategoryDrinkLike(cat);
+                const itemsInCat = plats.filter(item => item.category === cat);
+                return (
+                  <div
+                    key={cat}
+                    style={{ animation: 'fadeIn 0.2s ease-out' }}
+                    className={drinkLike ? "flex flex-col gap-4 max-w-3xl mx-auto" : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10"}
+                  >
+                    {itemsInCat.map((item) =>
+                      drinkLike ? (
+                        <DrinkCard key={item.id} item={item} onClick={() => openModal(item)} />
+                      ) : (
+                        <FoodCard key={item.id} item={item} onClick={() => openModal(item)} />
+                      )
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </main>
