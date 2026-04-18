@@ -1252,42 +1252,74 @@
       }
     }
 
-    // ── UPLOAD IMAGE (ImgBB) ──
+    // ── UPLOAD IMAGE: WebP compress → ImgBB ──
+    // Converts to WebP on-device before upload → smaller file, faster Cloudinary cold fetch
+    function compressToWebP(file, maxWidth = 1200, quality = 0.85) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+          let w = img.naturalWidth, h = img.naturalHeight;
+          if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Conversion échouée')), 'image/webp', quality);
+        };
+        img.onerror = () => reject(new Error('Lecture image échouée'));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
     async function uploadImage(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const statusEl = document.getElementById('upload-status');
       statusEl.style.display = 'block';
-      statusEl.textContent = '⏳ Upload en cours...';
+      statusEl.textContent = '⏳ Compression en cours...';
       statusEl.style.color = 'var(--text-muted)';
 
-      const formData = new FormData();
-      formData.append('image', file);
-
       try {
-        const res = await fetch('https://api.imgbb.com/1/upload?key=4c61de43c0b8a428d9d5c42e9006c051', {
+        // Step 1 — compress to WebP before upload
+        const webpBlob = await compressToWebP(file);
+        const before = (file.size / 1024).toFixed(0);
+        const after  = (webpBlob.size / 1024).toFixed(0);
+        statusEl.textContent = `⏳ Upload... (${before} KB → ${after} KB)`;
+
+        // Step 2 — send compressed blob to ImgBB
+        const formData = new FormData();
+        // ImgBB expects base64 in the 'image' field
+        const base64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = () => res(reader.result.split(',')[1]);
+          reader.onerror = rej;
+          reader.readAsDataURL(webpBlob);
+        });
+        formData.append('image', base64);
+
+        const apiRes = await fetch('https://api.imgbb.com/1/upload?key=4c61de43c0b8a428d9d5c42e9006c051', {
           method: 'POST',
           body: formData
         });
-        const data = await res.json();
+        const data = await apiRes.json();
 
         if (data.success) {
           const url = data.data.url;
           document.getElementById('f-image').value = url;
           previewImg(url);
-          statusEl.textContent = '✅ Image uploadée avec succès !';
+          const saved = Math.round((1 - webpBlob.size / file.size) * 100);
+          statusEl.textContent = `✅ Uploadée ! ${before} KB → ${after} KB (−${saved}%)`;
           statusEl.style.color = 'var(--success)';
         } else {
-          throw new Error('Erreur API ImgBB');
+          throw new Error(data.error?.message || 'Erreur API ImgBB');
         }
       } catch (err) {
-        statusEl.textContent = '❌ Erreur lors de l\'upload.';
+        statusEl.textContent = '❌ Erreur : ' + err.message;
         statusEl.style.color = 'var(--danger)';
         console.error(err);
       }
 
-      setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+      setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
       event.target.value = '';
     }
 
