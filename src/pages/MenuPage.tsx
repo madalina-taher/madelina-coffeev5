@@ -174,7 +174,7 @@ const MenuPage = () => {
   }, []);
 
   // Compute categories from loaded items
-  const categories = Array.from(new Set(plats.map(item => item.category)))
+  const categories = (Array.from(new Set(plats.map(item => item.category))) as string[])
     .sort((a, b) => {
       const indexA = ORDER.indexOf(a);
       const indexB = ORDER.indexOf(b);
@@ -316,8 +316,16 @@ const MenuPage = () => {
               onClick={(e) => e.stopPropagation()}
             >
               {selectedItem.image && (
-                <div className="h-64 overflow-hidden">
-                  <img src={optimizeImage(selectedItem.image, 1000)} alt={selectedItem.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                <div className="h-64 overflow-hidden bg-madelina-cream">
+                  <img
+                    src={optimizeImage(selectedItem.image)}
+                    alt={selectedItem.title}
+                    className="w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                    onLoad={e => (e.currentTarget.style.opacity = '1')}
+                    style={{ opacity: 0, transition: 'opacity 0.25s ease' }}
+                  />
                 </div>
               )}
               <div className="p-8">
