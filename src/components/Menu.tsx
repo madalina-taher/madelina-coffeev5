@@ -31,6 +31,15 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
+// ── Cloudinary fetch proxy — serves any image optimized (auto WebP/AVIF, smart compression, max 800px) ──
+const CLOUDINARY_CLOUD = 'dr7xf4gui';
+function optimizeImage(url: string | undefined, width = 800): string {
+  if (!url) return '';
+  // Don't double-wrap Cloudinary URLs
+  if (url.includes('res.cloudinary.com')) return url;
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/f_auto,q_auto,w_${width},c_limit/${url}`;
+}
+
 // ── Local / GitHub Pages URL ──
 // We use the deployed file on GitHub Pages to avoid the 5-minute cache of raw.githubusercontent.com
 const MENU_RAW_URL = '/madelina-coffeev5/menu-data.html';
@@ -47,7 +56,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
     setIsCategoryLoading(true);
 
     const itemsInCat = plats.filter(item => item.category === cat);
-    const imagesToLoad = itemsInCat.map(item => item.image).filter(Boolean) as string[];
+    const imagesToLoad = itemsInCat.map(item => optimizeImage(item.image)).filter(Boolean);
 
     if (imagesToLoad.length === 0) {
       setTimeout(() => {
@@ -103,7 +112,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
       plats.forEach((item: MenuItem) => {
         if (item.image) {
           const img = new Image();
-          img.src = item.image;
+          img.src = optimizeImage(item.image);
         }
       });
     }, 100);
@@ -191,7 +200,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
                             className="group glass-card rounded-[2.5rem] overflow-hidden hover:shadow-2xl transition-all duration-500 bg-white border border-madelina-terracotta/5"
                           >
                             <div className="relative h-72 overflow-hidden">
-                              <img src={item.image} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="eager" fetchPriority="high" decoding="async" />
+                              <img src={optimizeImage(item.image)} alt={item.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="eager" fetchPriority="high" decoding="async" />
                               <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-md px-4 py-1.5 rounded-full shadow-lg">
                                 <span className="font-bold text-madelina-terracotta tracking-tight">
                                   {typeof item.price === 'number' ? item.price.toFixed(1) : item.price} DT
@@ -241,7 +250,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
             >
               {selectedItem.image && (
                 <div className="h-64 overflow-hidden">
-                  <img src={selectedItem.image} alt={selectedItem.title} className="w-full h-full object-cover" />
+                  <img src={optimizeImage(selectedItem.image, 1000)} alt={selectedItem.title} className="w-full h-full object-cover" />
                 </div>
               )}
               <div className="p-8">

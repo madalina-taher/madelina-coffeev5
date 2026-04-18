@@ -42,6 +42,14 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
+// ── Cloudinary fetch proxy — serves any image optimized (auto WebP/AVIF, smart compression) ──
+const CLOUDINARY_CLOUD = 'dr7xf4gui';
+function optimizeImage(url: string | undefined, width = 800): string {
+  if (!url) return '';
+  if (url.includes('res.cloudinary.com')) return url;
+  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/f_auto,q_auto,w_${width},c_limit/${url}`;
+}
+
 // Memoized card components — avoid re-renders when category changes
 const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void }) => (
   <div
@@ -51,7 +59,7 @@ const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void
     <div className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 mr-4">
       {item.image ? (
         <img
-          src={item.image}
+          src={optimizeImage(item.image, 400)}
           alt={item.title}
           className="w-full h-full object-cover rounded-xl"
           loading="eager"
@@ -86,7 +94,7 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
     <div className="relative h-40 sm:h-72 overflow-hidden bg-madelina-cream">
       {item.image && (
         <img
-          src={item.image}
+          src={optimizeImage(item.image)}
           alt={item.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="eager"
@@ -180,7 +188,7 @@ const MenuPage = () => {
       plats.forEach(item => {
         if (item.image) {
           const img = new Image();
-          img.src = item.image;
+          img.src = optimizeImage(item.image);
         }
       });
     };
@@ -202,7 +210,7 @@ const MenuPage = () => {
     
     // Find images for this category
     const itemsInCat = plats.filter(item => item.category === cat);
-    const imagesToLoad = itemsInCat.map(item => item.image).filter(Boolean) as string[];
+    const imagesToLoad = itemsInCat.map(item => optimizeImage(item.image)).filter(Boolean);
 
     if (imagesToLoad.length === 0) {
       setTimeout(() => {
@@ -341,7 +349,7 @@ const MenuPage = () => {
             >
               {selectedItem.image && (
                 <div className="h-64 overflow-hidden">
-                  <img src={selectedItem.image} alt={selectedItem.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                  <img src={optimizeImage(selectedItem.image, 1000)} alt={selectedItem.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 </div>
               )}
               <div className="p-8">
