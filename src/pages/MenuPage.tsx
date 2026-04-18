@@ -42,13 +42,6 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
-// ── Cloudinary fetch proxy — serves any image optimized (auto WebP/AVIF, smart compression) ──
-const CLOUDINARY_CLOUD = 'dr7xf4gui';
-function optimizeImage(url: string | undefined, width = 800): string {
-  if (!url) return '';
-  if (url.includes('res.cloudinary.com')) return url;
-  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/f_auto,q_auto,w_${width},c_limit/${url}`;
-}
 
 // Memoized card components — avoid re-renders when category changes
 const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void }) => (
@@ -60,7 +53,7 @@ const DrinkCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void
       {item.image ? (
         <div className="w-full h-full bg-madelina-cream rounded-xl overflow-hidden">
           <img
-            src={optimizeImage(item.image, 400)}
+            src={item.image}
             alt={item.title}
             className="w-full h-full object-cover rounded-xl"
             loading="eager"
@@ -98,7 +91,7 @@ const FoodCard = memo(({ item, onClick }: { item: MenuItem; onClick: () => void 
     <div className="relative h-40 sm:h-72 overflow-hidden bg-madelina-cream">
       {item.image && (
         <img
-          src={optimizeImage(item.image)}
+          src={item.image}
           alt={item.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="eager"
@@ -192,7 +185,7 @@ const MenuPage = () => {
       plats.forEach(item => {
         if (item.image) {
           const img = new Image();
-          img.src = optimizeImage(item.image);
+          img.src = item.image;
         }
       });
     };
@@ -318,7 +311,7 @@ const MenuPage = () => {
               {selectedItem.image && (
                 <div className="h-64 overflow-hidden bg-madelina-cream">
                   <img
-                    src={optimizeImage(selectedItem.image)}
+                    src={selectedItem.image}
                     alt={selectedItem.title}
                     className="w-full h-full object-cover"
                     loading="eager"

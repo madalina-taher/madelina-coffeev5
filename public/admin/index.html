@@ -1253,8 +1253,8 @@
     }
 
     // ── UPLOAD IMAGE: WebP compress → ImgBB ──
-    // Converts to WebP on-device before upload → smaller file, faster Cloudinary cold fetch
-    function compressToWebP(file, maxWidth = 1200, quality = 0.85) {
+    // Converts to WebP on-device at serve-ready size before upload — no runtime proxy needed
+    function compressToWebP(file, maxWidth = 800, quality = 0.85) {
       return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {

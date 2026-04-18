@@ -31,14 +31,6 @@ function parseMenuHTML(html: string): MenuItem[] {
   return items;
 }
 
-// ── Cloudinary fetch proxy — serves any image optimized (auto WebP/AVIF, smart compression, max 800px) ──
-const CLOUDINARY_CLOUD = 'dr7xf4gui';
-function optimizeImage(url: string | undefined, width = 800): string {
-  if (!url) return '';
-  // Don't double-wrap Cloudinary URLs
-  if (url.includes('res.cloudinary.com')) return url;
-  return `https://res.cloudinary.com/${CLOUDINARY_CLOUD}/image/fetch/f_auto,q_auto,w_${width},c_limit/${url}`;
-}
 
 // ── Local / GitHub Pages URL ──
 // We use the deployed file on GitHub Pages to avoid the 5-minute cache of raw.githubusercontent.com
@@ -89,7 +81,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
       plats.forEach((item: MenuItem) => {
         if (item.image) {
           const img = new Image();
-          img.src = optimizeImage(item.image);
+          img.src = item.image;
         }
       });
     }, 100);
@@ -172,7 +164,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
                           {/* Skeleton shimmer while image loads */}
                           <div className="relative h-72 overflow-hidden bg-madelina-cream">
                             <img
-                              src={optimizeImage(item.image)}
+                              src={item.image}
                               alt={item.title}
                               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                               loading="eager"
@@ -230,7 +222,7 @@ export const Menu = ({ isPreview = false }: { isPreview?: boolean }) => {
               {selectedItem.image && (
                 <div className="h-64 overflow-hidden bg-madelina-cream">
                   <img
-                    src={optimizeImage(selectedItem.image)}
+                    src={selectedItem.image}
                     alt={selectedItem.title}
                     className="w-full h-full object-cover"
                     loading="eager"
